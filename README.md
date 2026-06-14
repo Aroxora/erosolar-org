@@ -64,6 +64,23 @@ Strong alternatives if taken:
    cd outreach && npm start
    ```
 
+6. Enable admin login (one-time, Firebase Console → Authentication):
+   - **Sign-in method → add Google** provider.
+   - **Settings → Authorized domains** → ensure `erosolar.org`, `twitch-womens-history.web.app`, and `localhost` are listed.
+   - Only `daburu.dragon@gmail.com` gets admin powers (enforced in the callable functions and in the UI gate).
+
+> ⚠️ **Rotate the API keys.** The DeepSeek, Tavily, and Proton Bridge credentials were
+> shared in chat during setup. They are stored only in gitignored `.env` files (never
+> committed), but treat them as compromised: rotate the DeepSeek + Tavily keys and the
+> Proton Bridge password, then update `functions/.env`, `outreach/.env`, and any Cloud
+> secrets / Lambda env.
+
+> ℹ️ **Seed fallback.** The site ships a baked-in seed (`site/src/app/seed.data.ts`) so
+> Jobs, the Tracker, PhD live-status, and the dated Blog log show real content immediately
+> — even before Blaze + the first agent scan. Live Firestore data automatically replaces
+> the seed once scans run. The comprehensive PhD & Labs directory (~70 programs/labs across
+> every region) is always rendered client-side and needs no backend.
+
 After Blaze + functions deploy, visit erosolar.org (as admin Google user daburu.dragon@gmail.com) and test the chatbot ("scan jobs now", "toggle autoApply on", etc.). Scheduled agents will start running automatically.
 
 Primary URL: https://erosolar.org (hosted on Firebase project twitch-womens-history with custom domain).
@@ -84,13 +101,12 @@ See full "Local Development", "Architecture", and "Deployment" sections below fo
 
 If erosolar.org isn't resolving to the new site yet, add/verify the custom domain in Firebase Console > Hosting > Custom domains (point your DNS as instructed).
 
-**Immediate fix for the "No matches or no data yet" on /jobs (from your screenshot):**
+**Jobs / Tracker / Blog are populated out of the box** via the baked-in seed fallback, so
+they are never empty. To replace the seed with *live* agent-fetched data:
 - Complete steps 1-3 above (Blaze + secrets + `firebase deploy --only functions`).
 - On the live https://erosolar.org, sign in as admin (topbar Google button).
-- Go to /jobs or open the chatbot.
-- Click "Force agent scan (admin)" or type in chatbot: `scan jobs now` and `scan phd now`.
-- The cloud agents will fetch fresh data using DeepSeek-v4-pro + Tavily and write it to Firestore.
-- Refresh — the jobs list (Anthropic, OpenAI, xAI, DeepSeek visa track roles, etc.) and PhD tracker will be populated and live.
+- Go to /jobs or /tracker and click "Force agent scan (admin)", or open the chatbot and type `scan jobs now` / `scan phd now`.
+- The cloud agents fetch fresh data using DeepSeek-v4-pro + Tavily and write it to Firestore; the live data then replaces the seed automatically.
 - Future scans happen automatically via the scheduled cloud functions.
 
 The rest of the site (Home + résumé with agentic learning section, Work page describing your repos by purpose, Live trackers button, topbar with GitHub/LinkedIn, footer with local time clock, chatbot for full control of outreach/auto-apply/drafts/updates) is already deployed and should match or exceed the screenshot once the first scan runs.
