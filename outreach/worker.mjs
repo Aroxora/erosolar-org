@@ -203,8 +203,24 @@ async function deepseekRaw(messages, model = 'deepseek-v4-pro', json = false, ma
   return (await r.json()).choices?.[0]?.message?.content?.trim() || '';
 }
 
-async function getMailCursor() { try { return (await db.collection('settings').doc('mailCursor').get()).data()?.inboxUid || 0; } catch { return 0; } }
-async function setMailCursor(uid) { try { await db.collection('settings').doc('mailCursor').set({ inboxUid: uid, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true }); } catch {} }
+async function getMailCursor(acct) { try { return (await db.collection('settings').doc('mailCursor').get()).data()?.[`uid_${acct}`] || 0; } catch { return 0; } }
+async function setMailCursor(acct, uid) { try { await db.collection('settings').doc('mailCursor').set({ [`uid_${acct}`]: uid, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true }); } catch {} }
+
+// Mail accounts to read/track. Proton Bridge (localhost) + Gmail (if configured).
+function isLocalHost(h) { return h === '127.0.0.1' || h === 'localhost' || h === '::1'; }
+const MAIL_ACCOUNTS = [
+  { name: 'proton', host: IMAP_HOST, port: IMAP_PORT, user: IMAP_USER, pass: IMAP_PASS, secure: IMAP_TLS === 'SSL' },
+];
+if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+  MAIL_ACCOUNTS.push({
+    name: 'gmail',
+    host: process.env.GMAIL_IMAP_HOST || 'imap.gmail.com',
+    port: Number(process.env.GMAIL_IMAP_PORT || 993),
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, ''), // app passwords are shown space-separated
+    secure: true,
+  });
+}
 
 function looksLikeBounce(p) {
   const from = (p.from?.text || '').toLowerCase();
@@ -293,33 +309,55 @@ async function triageMessage(p, outreachOn) {
   // not a bounce or a known reply → leave it (read-only; nothing to do)
 }
 
-// Read INBOX non-destructively (never marks mail seen), triage anything new.
-async function readAndTriageInbox(outreachOn) {
+// Read one account's INBOX non-destructively (never marks mail seen), track every
+// new message, and triage anything actionable. TLS is verified for real hosts;
+// only the localhost Proton bridge (self-signed) relaxes verification.
+async function readAndTriageInbox(acct, outreachOn) {
+  if (!acct.pass) { return 0; } // not configured
   let client;
   try {
-    client = new ImapFlow({ host: IMAP_HOST, port: IMAP_PORT, secure: IMAP_TLS === 'SSL', auth: { user: IMAP_USER, pass: IMAP_PASS }, logger: false, tls: { rejectUnauthorized: false } });
+    client = new ImapFlow({ host: acct.host, port: acct.port, secure: acct.secure, auth: { user: acct.user, pass: acct.pass }, logger: false, tls: { rejectUnauthorized: !isLocalHost(acct.host) } });
     await client.connect();
-  } catch (e) { console.warn('[mail] IMAP connect failed:', e.message); return 0; }
+  } catch (e) { console.warn(`[mail:${acct.name}] IMAP connect failed:`, e.message); return 0; }
   let processed = 0;
   const lock = await client.getMailboxLock('INBOX');
   try {
-    const cursor = await getMailCursor();
+    const cursor = await getMailCursor(acct.name);
     if (cursor === 0) {
       const next = client.mailbox?.uidNext || 1;
-      await setMailCursor(Math.max(0, next - 1));
-      console.log('[mail] bootstrapped cursor at uid', next - 1, '— future mail will be triaged');
+      await setMailCursor(acct.name, Math.max(0, next - 1));
+      console.log(`[mail:${acct.name}] bootstrapped cursor at uid`, next - 1, '— future mail will be tracked');
       return 0;
     }
     let maxUid = cursor;
     for await (const m of client.fetch({ uid: `${cursor + 1}:*` }, { uid: true, source: true })) {
       if (m.uid <= cursor) continue;
       maxUid = Math.max(maxUid, m.uid);
-      try { await triageMessage(await simpleParser(m.source), outreachOn); processed++; }
-      catch (e) { console.warn('[mail] triage fail uid', m.uid, e.message); }
+      try {
+        const parsed = await simpleParser(m.source);
+        await trackSeen(acct.name, parsed);      // log EVERY email read
+        await triageMessage(parsed, outreachOn); // act only on bounces / replies
+        processed++;
+      } catch (e) { console.warn(`[mail:${acct.name}] triage fail uid`, m.uid, e.message); }
     }
-    if (maxUid > cursor) await setMailCursor(maxUid);
+    if (maxUid > cursor) await setMailCursor(acct.name, maxUid);
   } finally { lock.release(); await client.logout().catch(() => {}); }
+  if (processed) console.log(`[mail:${acct.name}] tracked + triaged`, processed, 'message(s)');
   return processed;
+}
+
+// Lightweight "every email read" tracker (idempotent by messageId).
+async function trackSeen(account, p) {
+  try {
+    const from = p.from?.value?.[0]?.address || '';
+    const id = p.messageId ? Buffer.from(p.messageId).toString('base64url').slice(0, 180) : `${account}-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+    await db.collection('mailSeen').doc(id).set({
+      account, from, fromName: p.from?.value?.[0]?.name || '',
+      to: p.to?.value?.[0]?.address || '', subject: (p.subject || '').slice(0, 300),
+      messageId: p.messageId || null, date: p.date ? p.date.toISOString() : null,
+      readAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  } catch (e) { console.warn('[mail] trackSeen failed:', e.message); }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -385,6 +423,49 @@ async function checkGithubMomentum() {
   else console.log('[github][DRY] would alert:', hrs, 'h vs avg', avgHrs);
   await db.collection('settings').doc('commitAlert').set({ lastSentAt: admin.firestore.FieldValue.serverTimestamp(), sinceLastHrs: Number(hrs), avgHrs: Number(avgHrs), commitsAnalyzed: times.length }, { merge: true });
   console.log('[github] momentum alert:', hrs, 'h vs avg', avgHrs);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  GITHUB DEPENDABOT — auto-merge mergeable dependency/security PRs (every ~3h)
+//  Requires a token with Pull-requests:write + Contents:write. If the token is
+//  read-only, it can't merge — it then emails bo@shang.software the list to action.
+// ════════════════════════════════════════════════════════════════════════════
+async function autoFixDependabot() {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) return;
+  const s = await db.collection('settings').doc('dependabot').get();
+  if (Date.now() - (s.data()?.lastRunAt?.toMillis?.() || 0) < 3 * 3600 * 1000) return; // ~3h
+
+  const headers = { 'User-Agent': 'erosolar-dependabot', Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', Authorization: `Bearer ${token}` };
+  const gh = (p, init) => fetch('https://api.github.com' + p, { headers, ...(init || {}) });
+
+  let merged = 0, flagged = 0; const flags = [];
+  try {
+    const reposRes = await gh('/user/repos?sort=pushed&direction=desc&per_page=30&affiliation=owner');
+    if (!reposRes.ok) { console.warn('[dependabot] repos list', reposRes.status); return; }
+    for (const repo of (await reposRes.json()).slice(0, 20)) {
+      try {
+        const prRes = await gh(`/repos/${repo.full_name}/pulls?state=open&per_page=20`);
+        if (!prRes.ok) continue;
+        const prs = (await prRes.json()).filter(p => (p.user?.login || '').toLowerCase().startsWith('dependabot'));
+        for (const pr of prs) {
+          const mr = await gh(`/repos/${repo.full_name}/pulls/${pr.number}/merge`, { method: 'PUT', body: JSON.stringify({ merge_method: 'squash' }) });
+          if (mr.ok) { merged++; console.log('[dependabot] merged', repo.full_name, '#' + pr.number); }
+          else { flagged++; if (flags.length < 25) flags.push(`${repo.full_name}#${pr.number} "${pr.title}" — HTTP ${mr.status}`); }
+        }
+      } catch { /* skip a repo */ }
+    }
+  } catch (e) { console.warn('[dependabot]', e.message); return; }
+
+  await db.collection('settings').doc('dependabot').set({ lastRunAt: admin.firestore.FieldValue.serverTimestamp(), merged, flagged }, { merge: true });
+  if (merged || flagged) {
+    console.log('[dependabot] merged', merged, 'flagged', flagged);
+    if (!DRY) await sendMail({
+      to: HUMAN_EMAIL,
+      subject: `[dependabot] auto-merged ${merged}, ${flagged} need attention`,
+      text: `Auto-merged ${merged} Dependabot PR(s).` + (flagged ? `\n\nCould not auto-merge ${flagged} (token may lack Pull-requests/Contents write, branch protection, or the PR isn't mergeable):\n` + flags.join('\n') : ''),
+    }).catch(() => {});
+  }
 }
 
 async function drainQueue() {
@@ -627,13 +708,17 @@ async function mainLoop() {
         if (n > 0) console.log('Manual application drain (autoApply off):', n);
       }
 
-      // Inbound mail: read + triage (bounces + replies). Always reads (non-destructive);
-      // third-party follow-ups are only sent when outreach is ON.
-      try { const n = await readAndTriageInbox(outreachOn); if (n) console.log('[mail] triaged', n, 'new message(s)'); }
-      catch (e) { console.error('[mail] inbox tick error', e.message); }
+      // Inbound mail across ALL accounts (Proton + Gmail): read + track + triage.
+      for (const acct of MAIL_ACCOUNTS) {
+        try { await readAndTriageInbox(acct, outreachOn); }
+        catch (e) { console.error(`[mail:${acct.name}] inbox tick error`, e.message); }
+      }
 
       // GitHub commit-momentum nudge (deepseek-v4-flash, max 1 email / 12h).
       try { await checkGithubMomentum(); } catch (e) { console.error('[github] tick error', e.message); }
+
+      // GitHub Dependabot: auto-merge mergeable dependency/security PRs (token-permitting).
+      try { await autoFixDependabot(); } catch (e) { console.error('[dependabot] tick error', e.message); }
     } catch (e) {
       console.error('Loop tick error', e);
     }

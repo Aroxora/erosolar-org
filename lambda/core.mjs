@@ -196,6 +196,62 @@ export async function fetchPublicCommits({ user, token, maxRepos = 8, perRepo = 
   return out.slice(0, 80);
 }
 
+// ── Agentic application assistant: research + high-confidence fit + visa path ──
+// kind: 'phd' | 'job' ; region: 'CN' | 'HK' | 'US' | 'other'
+// Returns candidates with a confidence score + the concrete visa pathway. The
+// admin browser persists them: confidence >= 0.8 -> 'drafted' (ready), else 'flagged'.
+const VISA_GUIDE = {
+  'phd|CN': 'China study visa X1 (for programs > 180 days); the university issues a JW202 form + admission letter, then X1 at a Chinese consulate, then a residence permit within 30 days of arrival. (A 10-year L tourist visa with 90-day stays does NOT permit study.)',
+  'job|CN': 'China work visa Z: employer obtains a Work Permit Notice, then Z visa at a consulate, then Work Permit + residence permit after arrival. Requires a degree + relevant experience.',
+  'phd|HK': 'Hong Kong Student visa (sponsored by the university); strong post-study options (IANG).',
+  'job|HK': 'Hong Kong employment visa (GEP), employer-sponsored; or IANG if recently graduated in HK.',
+  'phd|US': 'US F-1 student visa: the school issues an I-20 after admission + funding proof; F-1 at a US consulate. (Funded PhDs typically cover this.)',
+  'job|US': 'US work authorization: H-1B (lottery, employer-sponsored), O-1 (extraordinary ability), or cap-exempt H-1B at universities/nonprofits. Some roles also consider STEM-OPT / green-card sponsorship.',
+};
+
+export async function findApplications({ kind = 'phd', region = 'CN', count = 6 } = {}) {
+  const k = kind === 'job' ? 'job' : 'phd';
+  const r = ['CN', 'HK', 'US'].includes(region) ? region : 'other';
+  const visa = VISA_GUIDE[`${k}|${r}`] || 'Confirm the appropriate study/work visa pathway for this region.';
+  const regionName = { CN: 'mainland China', HK: 'Hong Kong', US: 'the United States', other: 'top international locations' }[r];
+
+  const queries = k === 'phd'
+    ? [`top AI / machine learning PhD programs in ${regionName} now accepting international applicants 2026 2027 funding`,
+       `${regionName} AI PhD admissions international students application deadline scholarship contact professor email`,
+       `${regionName} AI lab PhD positions hiring international students visa support`]
+    : [`AI engineer / research / red-team jobs in ${regionName} hiring international applicants visa sponsorship 2026`,
+       `${regionName} AI lab careers work visa sponsorship relocation international`,
+       `frontier AI company ${regionName} jobs apply contact recruiter visa`];
+  const raw = [];
+  for (const q of queries) { try { const t = await tavilySearch(q, { maxResults: 8 }); if (t.results) raw.push(...t.results); } catch {} }
+
+  const prompt = `You are Bo Shang's high-confidence application agent. Bo is an AI/software engineer (résumé below). From the search results, produce a JSON array of the strongest, REAL ${k === 'phd' ? 'PhD programs/labs' : 'jobs'} in ${regionName} for Bo to apply to.
+Visa pathway for this category: ${visa}
+For EACH, return: {"institution":"<university or company>","role":"<program or job title>","url":"<application/source url>","contactEmail":"<a real application/admissions/recruiting email if present in the results, else empty>","deadline":"<date or 'rolling'/'unknown'>","why":"<1-2 sentences why Bo is a strong fit>","confidence":<0..1 fit+actionability>,"visaType":"<the visa code, e.g. X1/Z/F-1/H-1B>","visaNotes":"<1 sentence on the visa step Bo must take>","draftEmail":"<a tailored 150-220 word outreach/application email from Bo Shang ending '— Bo Shang', emphasizing relevant shipped work and willingness to handle the visa process>"}.
+Rules: NEVER invent emails, deadlines, or institutions not supported by the results (leave empty/unknown). confidence reflects BOTH fit and how actionable it is (real contact + open window = higher). Return ONLY a JSON array, max ${count} items, highest confidence first.
+RÉSUMÉ:
+${RESUME_CONTEXT}
+SEARCH RESULTS:
+${JSON.stringify(raw.slice(0, 24)).slice(0, 140000)}`;
+
+  let parsed = [];
+  try { parsed = JSON.parse(stripJsonArr(await deepseekChat([{ role: 'user', content: prompt }], { temperature: 0.2, max_tokens: 14000, json: true }))); }
+  catch { parsed = []; }
+  if (!Array.isArray(parsed)) parsed = parsed.applications || parsed.items || [];
+  return parsed.slice(0, count).map((a, i) => ({
+    id: 'app-' + Buffer.from(String((a.url || '') + (a.institution || '') + i)).toString('base64').replace(/[^a-z0-9]/gi, '').slice(0, 26),
+    kind: k, region: r,
+    institution: a.institution || 'unknown', role: a.role || '',
+    url: a.url || '', contactEmail: (a.contactEmail || '').toLowerCase(),
+    deadline: a.deadline || 'unknown', why: a.why || '',
+    confidence: Math.max(0, Math.min(1, Number(a.confidence) || 0)),
+    visaType: a.visaType || (VISA_GUIDE[`${k}|${r}`] ? '' : ''), visaNotes: a.visaNotes || visa,
+    draftEmail: a.draftEmail || '',
+    source: 'lambda-deepseek-tavily', foundAt: today(),
+  }));
+}
+function stripJsonArr(s) { const t = stripJson(s); const i = t.indexOf('['), j = t.lastIndexOf(']'); return i >= 0 && j > i ? t.slice(i, j + 1) : t; }
+
 // ── Admin chatbot reply (context passed in from the client) ──────────────────
 export async function chatReply(message, history = [], context = {}) {
   const sys = `You are Bo's private strategic co-pilot on erosolar.org, with live context (jobs, PhD/lab status, the dated update log) passed in from the client. Current date: ${today()}.

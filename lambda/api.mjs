@@ -14,7 +14,7 @@
 // The browser (authenticated admin) persists results to Firestore directly,
 // under the security rules that allow daburu.dragon@gmail.com to write.
 import admin from 'firebase-admin';
-import { ADMIN_EMAIL, runJobsScan, runPhdTracker, draftJobApplication, chatReply, translateTexts, fetchPublicCommits } from './core.mjs';
+import { ADMIN_EMAIL, runJobsScan, runPhdTracker, draftJobApplication, chatReply, translateTexts, fetchPublicCommits, findApplications } from './core.mjs';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'twitch-womens-history';
 if (!admin.apps.length) admin.initializeApp({ projectId: PROJECT_ID });
@@ -73,6 +73,7 @@ export const handler = async (event) => {
       : route.endsWith('/scan-jobs') ? { jobs: await runJobsScan() }
       : route.endsWith('/scan-phd') ? { programs: await runPhdTracker() }
       : route.endsWith('/draft') ? { draft: await draftJobApplication(data.job || {}, data.notes || '') }
+      : route.endsWith('/find-applications') ? { applications: await findApplications(data || {}) }
       : null;
     if (!r) return reply(404, { error: 'unknown route ' + path });
     return reply(200, r);
