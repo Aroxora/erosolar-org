@@ -64,6 +64,15 @@
 }
 .learning-cta { margin-top: 1.4rem; }
 
+// Hero video summary (TTS + stitched AI visuals)
+.video-summary { margin-top: 1.4rem; max-width: 680px; }
+.video-summary__player { width: 100%; border-radius: 14px; border: 1px solid var(--line-soft); background: #000; display: block; }
+.video-summary__bar { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; margin-top: .5rem; }
+.video-summary__tag { font-family: var(--mono); font-size: .76rem; color: var(--solar); }
+.video-summary__tag small { color: var(--muted); }
+.video-summary__dl { font-family: var(--mono); font-size: .74rem; color: var(--muted); text-decoration: none; }
+.video-summary__dl:hover { color: var(--solar); }
+
 // Hero audio summary (TTS) + transcript
 .audio-summary {
   margin-top: 1.4rem;

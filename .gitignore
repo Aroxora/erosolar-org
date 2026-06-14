@@ -29,3 +29,6 @@ firebase-debug.log
 # === os / editor ===
 .DS_Store
 *.log
+
+# studio render artifacts (videos ship from site/public/video)
+studio/out/

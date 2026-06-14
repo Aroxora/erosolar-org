@@ -10,13 +10,14 @@
       <a class="btn btn-ghost" href="#resume">Jump to résumé</a>
     </div>
 
-    <div class="audio-summary" aria-label="Audio summary of this site">
-      <div class="audio-summary__bar">
-        <span class="audio-summary__tag">▶ 55-sec summary <small>· AI voice</small></span>
-        <audio class="audio-summary__player" controls preload="none" src="/audio/home-summary.mp3">
-          Your browser doesn’t support audio — <a href="/audio/home-summary.mp3">download the MP3</a>.
-        </audio>
-        <a class="audio-summary__dl" href="/audio/home-summary.mp3" download>Download</a>
+    <div class="video-summary" aria-label="Video summary of this site">
+      <video class="video-summary__player" controls preload="none" playsinline poster="/video/home-summary.jpg" src="/video/home-summary.mp4">
+        Your browser can’t play video — <a href="/video/home-summary.mp4">download the MP4</a>.
+      </video>
+      <div class="video-summary__bar">
+        <span class="video-summary__tag">▶ 56-sec video summary <small>· AI voice + visuals</small></span>
+        <a class="video-summary__dl" href="/audio/home-summary.mp3" download>Audio only</a>
+        <a class="video-summary__dl" [routerLink]="'/notes'" fragment="ai-da-fenhua-zh">中文视频 →</a>
       </div>
       <details class="audio-summary__tx">
         <summary>Read the transcript</summary>

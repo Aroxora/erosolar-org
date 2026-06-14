@@ -12,6 +12,7 @@ import { Studio } from './pages/studio';
 import { StudioHow } from './pages/studio-how';
 import { AiCosts } from './pages/ai-costs';
 import { Notes } from './pages/notes';
+import { ResumeZh } from './pages/resume-zh';
 
 export const routes: Routes = [
   {
@@ -84,6 +85,15 @@ export const routes: Routes = [
       title: 'AI Cost Optimization — subscriptions vs API runtime, tiered routing | Bo Shang',
       description: 'A detailed June-2026 breakdown: Claude Max / ChatGPT Pro / Gemini Ultra / Grok Heavy dev-seat subscriptions vs metered API (Opus 4.8, Fable 5, DeepSeek V4-Pro) + Tavily search — and why tiered routing wins. LLMOps cost analysis by Bo Shang.',
       keywords: 'AI cost optimization, LLMOps, DeepSeek pricing, Claude Max, Opus 4.8, Fable 5, Tavily, tiered routing, AI engineering cost, token economics',
+    } },
+  },
+  {
+    path: 'resume-zh', component: ResumeZh, title: '商波 中文简历 — AI 工程师 / 创始人 | Bo Shang',
+    data: { seo: {
+      path: 'resume-zh',
+      title: '商波（Bo Shang）中文简历 — AI 工程师 / 创始人 | LLMOps · 智能体 · 安全',
+      description: '商波的简体中文简历：AI 工程师与创始人（Trenchwork），构建长周期 AI 智能体系统。核心能力涵盖智能体架构、多模型编排、LLMOps 成本优化、检索管道与安全工程。代表项目：Erosolar、Erosolar Coder、Vigil、Women Who Defend、Frontier Model Index、The Meridian、DRIFT。开放海外岗位（含签证支持）。',
+      keywords: 'Bo Shang, 商波, 中文简历, AI 工程师, LLMOps, 智能体, DeepSeek, 多模型路由, 网络安全, Trenchwork, Erosolar',
     } },
   },
   {

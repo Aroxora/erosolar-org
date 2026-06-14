@@ -104,12 +104,11 @@ import { NOTES_META } from './notes.data';
         <h3>AI 大分化：为什么智能越来越便宜，而卖智能的公司却越来越贵</h3>
         <p class="dek">一位开发者的 2026 年中 AI 经济与估值实地指南——从 token 价格，到万亿美元级别的 IPO。</p>
 
-        <div class="note-audio">
-          <span class="note-audio__tag">▶ 语音摘要 <small>· AI 配音（婷婷）· 约 1 分钟</small></span>
-          <audio class="note-audio__player" controls preload="none" src="/audio/home-summary-zh.mp3">
-            您的浏览器不支持音频播放——<a href="/audio/home-summary-zh.mp3">下载 MP3</a>。
-          </audio>
-          <a class="note-audio__dl" href="/audio/home-summary-zh.mp3" download>下载</a>
+        <div class="note-video">
+          <video class="note-video__player" controls preload="none" playsinline poster="/video/home-summary-zh.jpg" src="/video/home-summary-zh.mp4">
+            您的浏览器不支持视频——<a href="/video/home-summary-zh.mp4">下载 MP4</a>。
+          </video>
+          <span class="note-video__tag">▶ 视频摘要 <small>· AI 配音（婷婷）+ 画面 · 约 1 分钟</small> · <a class="note-video__dl" href="/audio/home-summary-zh.mp3" download>仅音频</a></span>
         </div>
 
         <p>我靠搭建 AI 智能体（agentic AI）系统为生，所以我会死盯两个数字。第一个，是我运行自己产品时，每个 token 要付多少钱；第二个，是市场为持有那些卖我 token 的公司，每股要付多少钱。到了 2026 年，这两条线分化得如此剧烈，以至于它们之间的差距，本身就成了科技行业最重要的故事。智能正一个月比一个月便宜，而生产智能的公司却从未如此值钱。这两件事同时为真，而把它们调和起来，就是整盘棋的关键。</p>
@@ -282,6 +281,12 @@ import { NOTES_META } from './notes.data';
     .note-audio__player { height:32px; flex:1; min-width:220px; }
     .note-audio__dl { font-family:var(--mono); font-size:.72rem; color:var(--muted); text-decoration:none; }
     .note-audio__dl:hover { color:var(--solar); }
+    .note-video { margin:.2rem 0 1rem; }
+    .note-video__player { width:100%; max-width:640px; border-radius:12px; border:1px solid var(--line-soft); background:#000; display:block; }
+    .note-video__tag { display:inline-block; margin-top:.45rem; font-family:var(--mono); font-size:.72rem; color:var(--solar); }
+    .note-video__tag small { color:var(--muted); }
+    .note-video__dl { color:var(--muted); text-decoration:none; }
+    .note-video__dl:hover { color:var(--solar); }
     .note-head { display:flex; gap:.6rem; align-items:center; margin-bottom:.5rem; }
     .chip { font-family:var(--mono); font-size:.72rem; color:var(--solar); border:1px solid var(--line-soft); border-radius:999px; padding:.18rem .55rem; }
     .tag { font-family:var(--mono); font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }

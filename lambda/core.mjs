@@ -36,6 +36,15 @@ All owner-controlled, DeepSeek + Tavily heavy, no vendor lock-in. Open to AI eng
 Contact: bo@trenchwork.org / bo@shang.software / 508-260-0326. Sites: erosolar.org, trenchwork.live.
 `.trim();
 
+// Simplified-Chinese résumé — used for CN/HK outreach drafting and Chinese chat replies.
+export const RESUME_CONTEXT_ZH = `
+商波（Bo Shang）— AI 工程师与创始人（Trenchwork），独立、端到端地构建可拥有、可验证的长周期 AI 智能体系统与底层基础设施。安全工程背景（塔夫茨大学 Tufts），精通应用 AI、网络安全与中国科技。按能力与价格在 Claude、GPT、Grok 与中国前沿模型（DeepSeek / 通义千问 / Kimi / GLM）之间做多模型路由；公开撰写关于 AI 成本、价值与竞争走向的分析。从第一性原理思考，靠亲手把最难的东西造出来学得最快。
+核心能力：智能体架构与工具调用；多模型编排与分层路由（DeepSeek-v4-pro + Tavily 为默认运行时，约比 Opus 4.8 便宜 22 倍，仅在最难任务上升级到前沿模型）；LLMOps / AI 成本优化（区分“开发位”与“产品运行时”、搜索层优化、Tavily 与自建 SearXNG 的“自建还是购买”取舍）；提示词缓存与上下文工程；RAG 检索与搜索管道；全栈（Angular、Node/TypeScript、Go、Firebase、AWS Lambda、SwiftUI）；防御性网络安全与红队。
+代表作品（按用途描述）：Vigil（Trenchwork 旗下 AI 防御性网络安全智能体）；Women Who Defend（动手实战的安全工程学习平台）；Erosolar（自主 AI 研究助手，自带编程 CLI）与 Erosolar Coder / Anvilwing（与 Claude Code 同级、已发布到 npm 的终端编程智能体）；Frontier Model Index（每日自动更新的 AI 前沿图谱）；The Meridian（全自动经济学人风格报纸）；DRIFT（硬科幻剧本 + 长周期视频管道）；Trenchwork（活动追踪守护进程 + iOS/Watch）；Endearo（7×24 个人 AI 生活助手）。
+求职意向：AI 工程、LLMOps、研究工程、红队 / AI 安全与基础设施岗位；开放海外职位，愿意配合任何所需的签证 / 担保 / 搬迁流程。
+联系方式：bo@shang.software / bo@trenchwork.org / 508-260-0326 · erosolar.org（中文简历见 /resume-zh）。
+`.trim();
+
 // ── LLM + search primitives (raw fetch; Node 20+ global fetch) ───────────────
 export async function deepseekChat(messages, { temperature = 0.2, max_tokens = 8000, json = false } = {}) {
   const key = process.env.DEEPSEEK_API_KEY;
@@ -154,8 +163,11 @@ export async function draftJobApplication(job = {}, extraNotes = '') {
 - Reference verifiable tech (DeepSeek v4 Pro at 1M context, Tavily grounding, Firebase/Firestore, Go/SwiftUI/Angular, owned keys / no vendor lock-in).
 - For roles noting visa/international (e.g. DeepSeek): note willingness to handle any visa/sponsorship/relocation process.
 - One clear ask; 1–2 live links (erosolar.org / trenchwork.live). Never fabricate titles or metrics. Sign "— Bo Shang".
-RÉSUMÉ:
+- If the company/role is Chinese or Hong Kong (or the notes ask for Chinese), write the entire email in natural Simplified Chinese and sign "— 商波 (Bo Shang)".
+RÉSUMÉ (EN):
 ${RESUME_CONTEXT}
+RÉSUMÉ (中文):
+${RESUME_CONTEXT_ZH}
 JOB: ${JSON.stringify({ title: job.title, company: job.company, location: job.location, visa: job.visaSponsorship, desc: (job.description || '').slice(0, 600) })}
 EXTRA NOTES: ${extraNotes}`;
   return (await deepseekChat([{ role: 'user', content: sys }], { temperature: 0.35, max_tokens: 1500 })).trim();
@@ -251,9 +263,11 @@ export async function findApplications({ kind = 'phd', region = 'CN', count = 6 
   const prompt = `You are Bo Shang's high-confidence application agent. Bo is an AI/software engineer (résumé below). From the search results, produce a JSON array of the strongest, REAL ${k === 'phd' ? 'PhD programs/labs' : 'jobs'} in ${regionName} for Bo to apply to.
 Visa pathway for this category: ${visa}
 For EACH, return: {"institution":"<university or company>","role":"<program or job title>","url":"<application/source url>","contactEmail":"<a real application/admissions/recruiting email if present in the results, else empty>","deadline":"<date or 'rolling'/'unknown'>","why":"<1-2 sentences why Bo is a strong fit>","confidence":<0..1 fit+actionability>,"visaType":"<the visa code, e.g. X1/Z/F-1/H-1B>","visaNotes":"<1 sentence on the visa step Bo must take>","draftEmail":"<a tailored 150-220 word outreach/application email from Bo Shang ending '— Bo Shang', emphasizing relevant shipped work and willingness to handle the visa process>"}.
-Rules: NEVER invent emails, deadlines, or institutions not supported by the results (leave empty/unknown). confidence reflects BOTH fit and how actionable it is (real contact + open window = higher). Return ONLY a JSON array, max ${count} items, highest confidence first.
-RÉSUMÉ:
+Rules: NEVER invent emails, deadlines, or institutions not supported by the results (leave empty/unknown). confidence reflects BOTH fit and how actionable it is (real contact + open window = higher). For China or Hong Kong regions, write "why" and "draftEmail" in natural Simplified Chinese (sign "— 商波 (Bo Shang)"). Return ONLY a JSON array, max ${count} items, highest confidence first.
+RÉSUMÉ (EN):
 ${RESUME_CONTEXT}
+RÉSUMÉ (中文，用于中国 / 香港的中文邮件):
+${RESUME_CONTEXT_ZH}
 SEARCH RESULTS:
 ${JSON.stringify(raw.slice(0, 24)).slice(0, 140000)}`;
 
@@ -279,7 +293,9 @@ function stripJsonArr(s) { const t = stripJson(s); const i = t.indexOf('['), j =
 export async function chatReply(message, history = [], context = {}) {
   const sys = `You are Bo's private strategic co-pilot on erosolar.org, with live context (jobs, PhD/lab status, the dated update log) passed in from the client. Current date: ${today()}.
 You can help draft job applications and outreach, choose targets (esp. visa-track roles like DeepSeek, plus Anthropic/OpenAI/xAI/Google AI and red-team/AI-safety/eng), review pending applications, toggle autoApply / agentic outreach, surface live PhD status, and suggest site updates.
-Be concise; cite sources/dates when relevant. For an action the UI can take, end with one line "ACTION: ..." (e.g. "ACTION: scan jobs now", "ACTION: toggle autoApply on", "ACTION: log update: <text>").
+Be concise; cite sources/dates when relevant. Reply in the user's language — if they write in Chinese, answer in 简体中文 (Bo's Chinese résumé is below). For an action the UI can take, end with one line "ACTION: ..." (e.g. "ACTION: scan jobs now", "ACTION: toggle autoApply on", "ACTION: log update: <text>").
+BO'S RÉSUMÉ (EN): ${RESUME_CONTEXT}
+BO 的简历（中文）: ${RESUME_CONTEXT_ZH}
 CONTEXT: ${JSON.stringify(context).slice(0, 14000)}`;
   const msgs = [{ role: 'system', content: sys }, ...(history || []).slice(-8), { role: 'user', content: message }];
   return (await deepseekChat(msgs, { temperature: 0.35, max_tokens: 6000 })).trim();
