@@ -96,7 +96,7 @@ import { RouterModule } from '@angular/router';
         <li>Tavily search pricing — <a href="https://tavily.com/#pricing" target="_blank" rel="noopener">tavily.com</a></li>
       </ul>
 
-      <p class="note">The frontier is worth paying for — just not for every token. This is exactly how Erosolar is built: DeepSeek-v4-pro + Tavily as the default runtime across the agentic stack (jobs, PhD/lab tracking, outreach, the newsroom, the coding agent), with selective escalation and aggressive caching. Owner-controlled keys, provenance-logged.</p>
+      <p class="note">The frontier is worth paying for — just not for every token. This is exactly how Erosolar is built: DeepSeek-v4-pro + Tavily as the default runtime across the agentic stack (jobs, PhD/lab tracking, outreach, the newsroom, the coding agent), with selective escalation and aggressive caching. Owner-controlled keys, provenance-logged. More in <a routerLink="/notes">Field notes</a> — search build-vs-buy, the $200-club-vs-China gap, and the 2026 compute/capital story.</p>
       <p class="small">— Bo Shang · <a href="mailto:bo@shang.software">bo&#64;shang.software</a> · <a routerLink="/">erosolar.org</a> · open to AI engineering / LLMOps / research-engineering roles.</p>
     </div>
   `,

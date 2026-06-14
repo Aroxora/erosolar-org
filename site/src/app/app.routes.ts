@@ -11,6 +11,7 @@ import { Apply } from './pages/apply';
 import { Studio } from './pages/studio';
 import { StudioHow } from './pages/studio-how';
 import { AiCosts } from './pages/ai-costs';
+import { Notes } from './pages/notes';
 
 export const routes: Routes = [
   {
@@ -83,6 +84,15 @@ export const routes: Routes = [
       title: 'AI Cost Optimization — subscriptions vs API runtime, tiered routing | Bo Shang',
       description: 'A detailed June-2026 breakdown: Claude Max / ChatGPT Pro / Gemini Ultra / Grok Heavy dev-seat subscriptions vs metered API (Opus 4.8, Fable 5, DeepSeek V4-Pro) + Tavily search — and why tiered routing wins. LLMOps cost analysis by Bo Shang.',
       keywords: 'AI cost optimization, LLMOps, DeepSeek pricing, Claude Max, Opus 4.8, Fable 5, Tavily, tiered routing, AI engineering cost, token economics',
+    } },
+  },
+  {
+    path: 'notes', component: Notes, title: 'Field notes — AI economics & infrastructure | Bo Shang',
+    data: { seo: {
+      path: 'notes',
+      title: 'Field Notes — AI economics, pricing & infrastructure | Bo Shang',
+      description: 'Sourced June-2026 analyses by Bo Shang: managed vs self-hosted web search (Tavily vs SearXNG), Western $200 subscriptions vs China’s API floor (DeepSeek/Qwen/GLM/Kimi), and the compute-and-capital story (Anthropic/OpenAI/SpaceX valuations, circular hyperscaler financing, orbital data centers).',
+      keywords: 'AI economics, LLM pricing, build vs buy search, Tavily, SearXNG, DeepSeek pricing, China AI API, Anthropic OpenAI valuation, SpaceX IPO, orbital data center, AI infrastructure analysis',
     } },
   },
   {
