@@ -1,6 +1,7 @@
 # erosolar-org
 
-Personal site for **Bo Shang** — software & solar energy (`bo@ero.solar`).
+Personal site for **Bo Shang** — software engineer · trenchwork.org
+(`bo@trenchwork.org` · `bo@shang.software` · 508-260-0326).
 Built with **Angular** and deployed to **Firebase Hosting**.
 
 > This repository is **private**. The deployed site is a clean professional
@@ -54,9 +55,9 @@ but counsel sign-off is the gate.
 
 1. **Professional portfolio** *(this repo)* — who you are, what you build, how to
    reach you. The single most useful site for getting hired. No case content.
-2. **ero.solar product / business site** — if ero.solar is a product or service,
-   a real marketing site: what it does, for whom, pricing, contact. Channels your
-   energy into the business.
+2. **trenchwork.org product / business site** — if trenchwork is a product or
+   service, a real marketing site: what it does, for whom, pricing, contact.
+   Channels your energy into the business.
 3. **Open-source / project showcase** — auto-pulls your public GitHub repos,
    shows what you ship. Demonstrates skill better than any résumé line.
 
@@ -88,5 +89,5 @@ but counsel sign-off is the gate.
 
 ## Which to build next?
 
-Group A #2 (ero.solar business site) or #3 (project showcase) are the natural
+Group A #2 (trenchwork business site) or #3 (project showcase) are the natural
 follow-ups to this portfolio. Say the word and I'll scaffold either one.

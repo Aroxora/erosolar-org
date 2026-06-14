@@ -32,6 +32,12 @@ interface Project {
   href?: string;
 }
 
+interface Contact {
+  kind: string;
+  value: string;
+  href: string;
+}
+
 @Component({
   selector: 'app-root',
   imports: [],
@@ -60,16 +66,23 @@ export class App implements AfterViewInit, OnDestroy {
   // ── EDIT: what you do ───────────────────────────────────────────────
   readonly focus: Focus[] = [
     { tag: '01', label: 'Software engineering', body: 'Full-stack web and cloud — dependable systems from data model to interface.' },
-    { tag: '02', label: 'Solar & clean energy', body: 'Work at ero.solar where software meets solar power.' },
+    { tag: '02', label: 'Systems & infrastructure', body: 'The load-bearing layer: services, data, and the plumbing that keeps it standing.' },
     { tag: '03', label: 'Web & product', body: 'Fast, accessible front-ends and the services behind them.' },
     { tag: '04', label: 'Automation & data', body: 'Tooling that turns messy inputs into something you can rely on.' },
   ];
 
   // ── EDIT: replace with your real projects (specifics beat adjectives) ─
   readonly projects: Project[] = [
-    { name: 'ero.solar', meta: 'Software · Solar', blurb: 'Home base for my software and solar-energy work. Replace this with a real description of what ero.solar is and does.', href: 'mailto:bo@ero.solar' },
+    { name: 'trenchwork.org', meta: 'Software · Home base', blurb: 'Where my software work lives. Replace this with a real description of what trenchwork is and what you ship there.', href: 'mailto:bo@trenchwork.org' },
     { name: 'Project two', meta: 'Add a tag', blurb: 'A concrete thing you built — the problem, what you made, the result. Numbers and tech land better than adjectives.' },
     { name: 'Project three', meta: 'Add a tag', blurb: 'Another piece of work worth showing. Link it to a repo, a demo, or a write-up.' },
+  ];
+
+  // ── EDIT: how people reach you ──────────────────────────────────────
+  readonly contacts: Contact[] = [
+    { kind: 'Email', value: 'bo@trenchwork.org', href: 'mailto:bo@trenchwork.org' },
+    { kind: 'Email', value: 'bo@shang.software', href: 'mailto:bo@shang.software' },
+    { kind: 'Phone', value: '508-260-0326', href: 'tel:+15082600326' },
   ];
 
   private raf = 0;
@@ -102,7 +115,7 @@ export class App implements AfterViewInit, OnDestroy {
 
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const palette = ['#ffd36e', '#ff9f45', '#ff7a33', '#ff5a36'];
+    const palette = ['#ffc24a', '#ff9e2c', '#ff6a2c', '#e8431f', '#5c87b0'];
     const pointer = { x: -9999, y: -9999, active: false };
     let w = 0;
     let h = 0;

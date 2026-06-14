@@ -57,19 +57,30 @@
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   font-family: var(--mono);
   font-weight: 500;
   letter-spacing: 0.02em;
   font-size: 0.95rem;
 
   &__mark {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, var(--gold), var(--coral) 70%);
-    box-shadow: 0 0 16px rgba(255, 122, 51, 0.8);
+    width: 13px;
+    height: 13px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--gold), var(--coral));
+    box-shadow: 0 0 14px rgba(255, 106, 44, 0.75);
     animation: pulse 4.5s ease-in-out infinite;
+  }
+  &__name { color: var(--ink); }
+  &__dom {
+    color: var(--solar);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    padding-left: 0.45rem;
+    margin-left: 0.1rem;
+    border-left: 1px solid var(--line);
+
+    @media (max-width: 440px) { display: none; }
   }
 }
 
@@ -482,12 +493,54 @@
   &__title {
     font-family: var(--display);
     font-weight: 340;
-    font-size: clamp(2.4rem, 7vw, 5rem);
+    font-size: clamp(2.2rem, 6vw, 4.4rem);
     letter-spacing: -0.025em;
     margin: 0;
-    line-height: 1;
+    line-height: 1.02;
   }
   &__lead { color: var(--muted); margin: 1.2rem auto 0; max-width: 40ch; }
+
+  &__list {
+    list-style: none;
+    margin: 2.6rem auto 0;
+    padding: 0;
+    max-width: 520px;
+    display: grid;
+    gap: 0.7rem;
+  }
+  &__item a {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.05rem 1.4rem;
+    border: 1px solid var(--line-soft);
+    border-radius: 14px;
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    text-align: left;
+    transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+
+    &:hover {
+      transform: translateY(-3px);
+      border-color: var(--line);
+      box-shadow: 0 20px 40px -26px rgba(255, 106, 44, 0.5);
+    }
+  }
+  &__kind {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--solar);
+  }
+  &__value { font-size: 1.05rem; color: var(--ink); word-break: break-word; }
+  &__go { color: var(--amber); font-size: 1.1rem; transition: transform 0.3s ease; }
+  &__item a:hover &__go { transform: translateX(4px); }
+
+  @media (max-width: 480px) {
+    &__item a { grid-template-columns: 1fr auto; }
+    &__kind { grid-column: 1 / -1; }
+  }
 }
 
 /* ── footer ──────────────────────────────────────────────────────────── */

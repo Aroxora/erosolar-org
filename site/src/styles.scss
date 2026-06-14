@@ -1,38 +1,40 @@
 /* ===========================================================================
-   ero.solar — global styles
-   Aesthetic: "solar dawn" — warm editorial light on deep, near-black ground.
+   trenchwork — global styles  ·  Bo Shang
+   Aesthetic: "trenchwork" — industrial builder. Graphite + concrete ground,
+   faint blueprint grid, hazard-amber accent, steel-blue counter-light.
    =========================================================================== */
 
 :root {
   /* ground */
-  --bg:        #0e0b09;
-  --bg-2:      #15100b;
-  --surface:   #1b1410;
-  --surface-2: #221a14;
-  --line:      rgba(255, 224, 186, 0.12);
-  --line-soft: rgba(255, 224, 186, 0.07);
+  --bg:        #0c0d0f;
+  --bg-2:      #101216;
+  --surface:   #15181d;
+  --surface-2: #1b1f25;
+  --line:      rgba(184, 202, 222, 0.13);
+  --line-soft: rgba(184, 202, 222, 0.07);
 
   /* ink */
-  --ink:       #f7eee1;
-  --ink-2:     #d9c8b4;
-  --muted:     #a7937d;
-  --faint:     #6f6052;
+  --ink:       #eef1f4;
+  --ink-2:     #c6ced6;
+  --muted:     #8a939d;
+  --faint:     #59626c;
 
-  /* solar */
-  --gold:      #ffd36e;
-  --amber:     #ff9f45;
-  --solar:     #ff7a33;
-  --coral:     #ff5a36;
-  --ember:     #e23d2e;
+  /* hazard amber accent (var names kept for continuity) */
+  --gold:      #ffc24a;
+  --amber:     #ff9e2c;
+  --solar:     #ff6a2c;
+  --coral:     #ff5630;
+  --ember:     #e8431f;
+  --steel:     #5c87b0;
 
-  --solar-grad: linear-gradient(100deg, var(--gold) 0%, var(--amber) 38%, var(--solar) 66%, var(--coral) 100%);
+  --solar-grad: linear-gradient(100deg, var(--gold) 0%, var(--amber) 40%, var(--solar) 72%, var(--coral) 100%);
 
   /* type */
   --display: "Fraunces", Georgia, "Times New Roman", serif;
   --sans:    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
   --mono:    "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 
-  --radius:  18px;
+  --radius:  16px;
   --maxw:    1180px;
 }
 
@@ -59,16 +61,19 @@ body {
   overflow-x: hidden;
 }
 
-/* atmospheric base wash — fixed so it sits behind everything */
+/* atmosphere: blueprint grid + work-light glow, fixed behind everything */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -2;
-  background:
-    radial-gradient(1100px 720px at 78% -8%, rgba(255, 150, 70, 0.20), transparent 60%),
-    radial-gradient(900px 600px at 8% 108%, rgba(226, 61, 46, 0.12), transparent 55%),
+  background-image:
+    linear-gradient(rgba(184, 202, 222, 0.030) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184, 202, 222, 0.030) 1px, transparent 1px),
+    radial-gradient(1050px 720px at 82% -10%, rgba(255, 120, 44, 0.16), transparent 60%),
+    radial-gradient(820px 600px at 4% 112%, rgba(92, 135, 176, 0.12), transparent 55%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  background-size: 62px 62px, 62px 62px, 100% 100%, 100% 100%, 100% 100%;
 }
 
 /* fine grain overlay for tactile depth */
@@ -83,7 +88,7 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-::selection { background: rgba(255, 122, 51, 0.30); color: #fff; }
+::selection { background: rgba(255, 106, 44, 0.30); color: #fff; }
 
 a { color: inherit; text-decoration: none; }
 
