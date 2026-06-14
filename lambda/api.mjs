@@ -14,7 +14,7 @@
 // The browser (authenticated admin) persists results to Firestore directly,
 // under the security rules that allow daburu.dragon@gmail.com to write.
 import admin from 'firebase-admin';
-import { ADMIN_EMAIL, runJobsScan, runPhdTracker, draftJobApplication, chatReply, translateTexts } from './core.mjs';
+import { ADMIN_EMAIL, runJobsScan, runPhdTracker, draftJobApplication, chatReply, translateTexts, fetchPublicCommits } from './core.mjs';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'twitch-womens-history';
 if (!admin.apps.length) admin.initializeApp({ projectId: PROJECT_ID });
@@ -44,6 +44,12 @@ export const handler = async (event) => {
   // ── PUBLIC route: /translate (visitors translate the UI; no admin token) ──
   if (path0.replace(/\/+$/, '').endsWith('/translate')) {
     try { return reply(200, { map: await translateTexts(body0.texts, body0.target || 'zh') }); }
+    catch (e) { return reply(500, { error: String(e?.message || e).slice(0, 200) }); }
+  }
+
+  // ── PUBLIC route: /commits (authenticated GitHub feed; PUBLIC repos only) ──
+  if (path0.replace(/\/+$/, '').endsWith('/commits')) {
+    try { return reply(200, { commits: await fetchPublicCommits() }); }
     catch (e) { return reply(500, { error: String(e?.message || e).slice(0, 200) }); }
   }
 

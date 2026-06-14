@@ -156,6 +156,46 @@ export async function translateTexts(texts, target = 'zh') {
   return JSON.parse(j.choices?.[0]?.message?.content || '{}');
 }
 
+// ── GitHub commit feed (authenticated; PUBLIC repos only, safe for the page) ──
+const GITHUB_API = 'https://api.github.com';
+async function gh(path, token) {
+  const r = await fetch(`${GITHUB_API}${path}`, {
+    headers: {
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'erosolar-commit-tracker',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  if (!r.ok) throw new Error(`GitHub ${r.status} ${path}`);
+  return r.json();
+}
+export async function fetchPublicCommits({ user, token, maxRepos = 8, perRepo = 8 } = {}) {
+  user = user || process.env.GITHUB_USER || 'Aroxora';
+  token = token || process.env.GITHUB_TOKEN || '';
+  // Most-recently-pushed repos owned by the user; keep only PUBLIC non-forks.
+  const repos = (await gh(`/users/${user}/repos?sort=pushed&direction=desc&per_page=30&type=owner`, token))
+    .filter((r) => !r.private && !r.fork)
+    .slice(0, maxRepos);
+  const out = [];
+  await Promise.all(repos.map(async (repo) => {
+    try {
+      const commits = await gh(`/repos/${repo.full_name}/commits?per_page=${perRepo}`, token);
+      for (const c of commits) {
+        out.push({
+          repo: repo.full_name,
+          message: (c.commit?.message || '').split('\n')[0].slice(0, 140),
+          sha: (c.sha || '').slice(0, 7),
+          url: c.html_url,
+          date: new Date(c.commit?.author?.date || c.commit?.committer?.date || 0).getTime(),
+        });
+      }
+    } catch { /* skip a repo that errors */ }
+  }));
+  out.sort((a, b) => b.date - a.date);
+  return out.slice(0, 80);
+}
+
 // ── Admin chatbot reply (context passed in from the client) ──────────────────
 export async function chatReply(message, history = [], context = {}) {
   const sys = `You are Bo's private strategic co-pilot on erosolar.org, with live context (jobs, PhD/lab status, the dated update log) passed in from the client. Current date: ${today()}.

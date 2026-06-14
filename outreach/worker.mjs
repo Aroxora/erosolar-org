@@ -329,15 +329,36 @@ async function readAndTriageInbox(outreachOn) {
 const GITHUB_USER = process.env.GITHUB_USER || 'Aroxora';
 
 async function fetchCommitTimes() {
+  const token = process.env.GITHUB_TOKEN || '';
+  const headers = { 'User-Agent': 'erosolar-momentum-worker', Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+
+  // With a token: comprehensive momentum across ALL your repos (public + private).
+  if (token) {
+    try {
+      const reposRes = await fetch('https://api.github.com/user/repos?sort=pushed&direction=desc&per_page=15&affiliation=owner', { headers });
+      if (reposRes.ok) {
+        const repos = await reposRes.json();
+        const times = [];
+        await Promise.all((repos || []).slice(0, 12).map(async (repo) => {
+          try {
+            const cRes = await fetch(`https://api.github.com/repos/${repo.full_name}/commits?per_page=8`, { headers });
+            if (!cRes.ok) return;
+            for (const c of await cRes.json()) times.push(new Date(c.commit?.author?.date || c.commit?.committer?.date || 0).getTime());
+          } catch { /* skip a repo */ }
+        }));
+        if (times.length) return times.sort((a, b) => b - a);
+      }
+    } catch { /* fall through to public events */ }
+  }
+
+  // Fallback (no token / error): public push events only.
   try {
-    const r = await fetch(`https://api.github.com/users/${GITHUB_USER}/events/public?per_page=100`, {
-      headers: { 'User-Agent': 'erosolar-momentum-worker', Accept: 'application/vnd.github+json', ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}) },
-    });
+    const r = await fetch(`https://api.github.com/users/${GITHUB_USER}/events/public?per_page=100`, { headers });
     if (!r.ok) return [];
     const events = await r.json();
     const times = [];
     for (const e of events) if (e.type === 'PushEvent' && e.payload?.commits?.length) for (const _ of e.payload.commits) times.push(new Date(e.created_at).getTime());
-    return times.sort((a, b) => b - a); // newest first
+    return times.sort((a, b) => b - a);
   } catch { return []; }
 }
 

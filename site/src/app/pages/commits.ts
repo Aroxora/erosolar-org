@@ -1,5 +1,6 @@
 import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LAMBDA_API_BASE } from '../api.config';
 
 interface Commit { repo: string; message: string; sha: string; url: string; date: number; }
 
@@ -78,6 +79,22 @@ export class Commits implements OnInit {
   async load() {
     this.loading.set(true);
     this.error.set('');
+    // 1) Prefer the authenticated Lambda proxy (fuller feed across all public repos,
+    //    rate-limit-proof). The token stays server-side; only public repos are returned.
+    if (LAMBDA_API_BASE) {
+      try {
+        const r = await fetch(LAMBDA_API_BASE + '/commits', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        if (r.ok) {
+          const data = await r.json();
+          if (Array.isArray(data.commits) && data.commits.length) {
+            this.commits.set(data.commits);
+            this.loading.set(false);
+            return;
+          }
+        }
+      } catch { /* fall through to the client-side public API */ }
+    }
+    // 2) Fallback: client-side public events API (works with no backend).
     try {
       const r = await fetch(`https://api.github.com/users/${this.user}/events/public?per_page=100`, { headers: { Accept: 'application/vnd.github+json' } });
       if (!r.ok) throw new Error(`GitHub API ${r.status}${r.status === 403 ? ' (rate limit — try again shortly)' : ''}`);
