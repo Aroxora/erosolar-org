@@ -1,13 +1,31 @@
-# dependencies & build output
+# === dependencies & build output ===
+node_modules/
 site/node_modules/
 site/dist/
 site/.angular/
+functions/node_modules/
+functions/lib/
+outreach/node_modules/
+lambda/node_modules/
 
-# firebase
+# === secrets / local env (NEVER commit) ===
+.env
+**/.env
+.env.*
+!.env.example
+!**/.env.example
+*.local
+functions/.secret.local
+**/service-account*.json
+**/serviceAccount*.json
+*.pem
+*.p8
+
+# === firebase ===
 .firebase/
 firebase-debug.log
 *-debug.log
 
-# os / editor
+# === os / editor ===
 .DS_Store
 *.log

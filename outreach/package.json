@@ -1,0 +1,20 @@
+{
+  "name": "erosolar-proton-outreach-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local Proton Bridge (or other IMAP/SMTP) agentic outreach worker. Polls Firestore settings + queue, drafts via DeepSeek if needed, sends, logs full history. Controlled by admin toggle (daburu.dragon@gmail.com).",
+  "scripts": {
+    "start": "node --env-file=.env worker.mjs",
+    "watch": "node --env-file=.env --watch worker.mjs",
+    "dry": "DRY_RUN=true node --env-file=.env worker.mjs",
+    "install-service": "bash install.sh || echo 'see README for launchd/ cron setup'"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "imapflow": "^1.0.16",
+    "nodemailer": "^6.9.14",
+    "mailparser": "^3.7.1",
+    "dotenv": "^16.4.5"
+  }
+}

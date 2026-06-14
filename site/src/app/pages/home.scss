@@ -1,0 +1,73 @@
+/* Home-specific polish that reuses root variables */
+.hero-home {
+  padding: 6rem clamp(1.1rem,4vw,3.2rem) 3rem;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  .hero-inner { max-width: 68ch; }
+  .title { font-family: var(--display); font-size: clamp(2.4rem,7vw,5.8rem); line-height: .98; margin: .6rem 0 1rem; letter-spacing: -.025em; }
+  .lead { color: var(--ink-2); font-size: 1.1rem; max-width: 58ch; }
+  .actions { margin-top: 1.8rem; display: flex; gap: .8rem; flex-wrap: wrap; }
+}
+
+.section-head { margin-bottom: 1.8rem; }
+.sub { color: var(--muted); max-width: 70ch; }
+
+.resume-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+.resume-card {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 1.3rem 1.4rem;
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  .meta { display: flex; justify-content: space-between; font-family: var(--mono); font-size: .72rem; color: var(--solar); }
+  .role { font-family: var(--display); font-size: 1.35rem; margin: .4rem 0 .5rem; letter-spacing: -.01em; }
+  .impact { color: var(--ink-2); font-size: .97rem; line-height: 1.5; }
+  .tech { margin-top: .7rem; display: flex; flex-wrap: wrap; gap: .35rem; }
+  .tag { font-family: var(--mono); font-size: .68rem; padding: .1rem .45rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+}
+
+.mental-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.mental-card {
+  padding: 1.4rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  h3 { font-family: var(--display); margin: 0 0 .6rem; font-size: 1.15rem; }
+  p { color: var(--ink-2); margin: 0; line-height: 1.55; }
+}
+
+.contact-mini {
+  text-align: center;
+  h2 { font-family: var(--display); font-size: clamp(1.6rem, 3.8vw, 2.6rem); }
+  .links { margin-top: 1rem; font-family: var(--mono); font-size: .9rem; color: var(--muted); a { color: var(--ink); } }
+}
+
+/* Agentic Learning section */
+.learning-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.learning-card {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 1.3rem 1.4rem;
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  h3 { font-family: var(--display); margin: 0 0 .5rem; font-size: 1.25rem; }
+  p { color: var(--ink-2); line-height: 1.55; margin: 0; }
+}
+.learning-cta { margin-top: 1.4rem; }
+
+.profiles-note {
+  margin-top: .6rem;
+  font-size: .82rem;
+  color: var(--muted);
+  font-family: var(--mono);
+  a { color: var(--solar); text-decoration: underline; }
+}

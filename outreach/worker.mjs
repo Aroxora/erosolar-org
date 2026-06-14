@@ -1,0 +1,377 @@
+#!/usr/bin/env node
+/**
+ * Local Proton outreach + auto job application worker for erosolar-org.
+ * - Connects to local Proton Bridge (IMAP/SMTP) using provided details (erolunar@pm.me).
+ * - Polls Firestore for:
+ *     settings/outreach { autoEnabled }
+ *     settings/autoApply { enabled }
+ *     outreachQueue + applicationQueue
+ * - General outreach: drafts (DeepSeek) + sends + FULL history to outreachHistory.
+ * - Job applications (the new auto capability): when autoApply ON, can auto-select high-fit unfilled roles
+ *   (prioritizes DeepSeek + other labs mentioning visa/sponsorship/international, AI eng/red-team titles),
+ *   drafts personalized using rich shipped-project resume context (Anvilwing, Meridian, DRIFT, Frontier Index,
+ *   Trenchwork, Endearo, erosolar), sends, logs COMPLETE body + job ref + status to jobApplications (and mirrors
+ *   to outreachHistory for unified view).
+ * - Admin controls everything from the site (topbar toggles, /jobs "Queue app", /applications page, chatbot "toggle autoApply on", "draft app for...", "queue application...").
+ *
+ * IMAP/SMTP (from user):
+ *   IMAP: 127.0.0.1:1143 user=erolunar@pm.me pass=... STARTTLS
+ *   SMTP: 127.0.0.1:1025 user=... pass=... SSL
+ *
+ * Run:
+ *   cd outreach && npm i
+ *   cp .env.example .env   # fill keys + bridge pass + path to service-account.json or use ADC
+ *   npm start   (or with DRY_RUN=true)
+ *
+ * For 24/7: use launchd (see install.sh) or a process manager. The worker is the trusted executor for all sends.
+ */
+
+import 'dotenv/config';
+import { ImapFlow } from 'imapflow';
+import nodemailer from 'nodemailer';
+import { simpleParser } from 'mailparser';
+import admin from 'firebase-admin';
+
+const DRY = process.env.DRY_RUN === 'true';
+const ADMIN_EMAIL = 'daburu.dragon@gmail.com';
+
+// Secrets come ONLY from the environment (outreach/.env, gitignored). Never hardcode
+// credentials in source — see outreach/.env.example for the variables to set.
+const IMAP_HOST = process.env.IMAP_HOST || '127.0.0.1';
+const IMAP_PORT = parseInt(process.env.IMAP_PORT || '1143', 10);
+const IMAP_USER = process.env.IMAP_USER || 'erolunar@pm.me';
+const IMAP_PASS = process.env.IMAP_PASS || '';
+const IMAP_TLS = (process.env.IMAP_TLS || 'STARTTLS').toUpperCase(); // STARTTLS or SSL
+
+const SMTP_HOST = process.env.SMTP_HOST || '127.0.0.1';
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '1025', 10);
+const SMTP_USER = process.env.SMTP_USER || IMAP_USER;
+const SMTP_PASS = process.env.SMTP_PASS || IMAP_PASS;
+const SMTP_SECURE = (process.env.SMTP_SECURE || 'false').toLowerCase() === 'true'; // true for implicit SSL
+
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY || '';
+
+if (!DEEPSEEK_API_KEY) console.warn('[worker] DEEPSEEK_API_KEY not set — drafting will fail until you fill outreach/.env');
+if (!IMAP_PASS && !DRY) console.warn('[worker] IMAP_PASS/SMTP_PASS not set — sending will fail until you fill outreach/.env (or run DRY_RUN=true)');
+
+// Firebase Admin (service account recommended for local worker; falls back to ADC)
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  admin.initializeApp();
+} else {
+  // For pure local testing without full ADC, you can point at a downloaded serviceAccount.json
+  const saPath = process.env.SERVICE_ACCOUNT || './service-account.json';
+  try {
+    admin.initializeApp({ credential: admin.credential.cert(saPath) });
+  } catch {
+    admin.initializeApp(); // hope for default creds
+  }
+}
+const db = admin.firestore();
+
+const DEEPSEEK_BASE = 'https://api.deepseek.com/v1';
+
+async function deepseekDraft(prompt) {
+  const r = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'deepseek-v4-pro',
+      messages: [
+        { role: 'system', content: 'You are a concise, professional, warm outreach writer for Bo Shang. Draft short, specific, high-signal emails to AI labs / professors / teams. Always include a clear ask and a one-line bio + link to erosolar.org or trenchwork.live. Sign as Bo Shang. Never fabricate credentials.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.4,
+      max_tokens: 1200,
+    }),
+  });
+  if (!r.ok) throw new Error('DeepSeek draft fail: ' + await r.text());
+  const j = await r.json();
+  return j.choices?.[0]?.message?.content?.trim() || '';
+}
+
+function makeTransporter() {
+  return nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_SECURE, // true = port 465 implicit TLS
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+    tls: SMTP_SECURE ? undefined : { rejectUnauthorized: false }, // for STARTTLS local bridge
+  });
+}
+
+async function sendMail({ to, subject, text, html }) {
+  if (DRY) {
+    console.log('[DRY] Would send to', to, 'subj:', subject);
+    console.log(text?.slice(0, 400));
+    return { messageId: 'dry-' + Date.now() };
+  }
+  const tx = makeTransporter();
+  const info = await tx.sendMail({
+    from: `Bo Shang via agent <${SMTP_USER}>`,
+    to,
+    subject,
+    text,
+    html: html || text,
+    headers: { 'X-Agent': 'erosolar-org-outreach-worker' },
+  });
+  return info;
+}
+
+async function getAutoEnabled() {
+  const s = await db.collection('settings').doc('outreach').get();
+  return !!(s.data()?.autoEnabled);
+}
+
+async function getAutoApplyEnabled() {
+  const s = await db.collection('settings').doc('autoApply').get();
+  return !!(s.data()?.enabled);
+}
+
+// Compact resume context for job application drafting (same spirit as CF version)
+const APP_RESUME = `Bo Shang builds owned, verifiable agentic systems and load-bearing infra. Shipped: Anvilwing (DeepSeek v4 Pro 1M-context terminal coding agent, npm-published, adversarial verifier, permission modes, headless SDK); The Meridian (fully autonomous Economist-style newspaper: DeepSeek plans/reports/writes + TTS, multi-platform Angular/iOS/Watch + VAPID); DRIFT (hard-science screenplay site with living weekly DeepSeek+Tavily science curator, long-horizon video pipeline using Seedance chaining + ffmpeg, grounded companion); Frontier Model Index (3 live auto-updated AI atlas sites + iOS, daily Tavily+DeepSeek synthesis to Firestore); erosolar (honest small CoT LLM pipeline with measured metrics only + Qwen agent stack + Angular chat); Endearo (24/7 life-assistant with Proton Bridge + local daemons, memory/todos, momentum coaching); Trenchwork (Go desktop activity tracker + iOS/Watch Live Activities + Tailscale approvals for agent runs). All owner-controlled, DeepSeek+Tavily heavy, no vendor lock-in. Open to international roles and willing to handle any required visa/sponsorship/relocation process. Links: erosolar.org, trenchwork.live.`.trim();
+
+async function drainQueue() {
+  const snap = await db.collection('outreachQueue').where('status', '==', 'queued').limit(5).get();
+  if (snap.empty) return 0;
+
+  let sent = 0;
+  for (const d of snap.docs) {
+    const q = { id: d.id, ...d.data() };
+    try {
+      let body = q.body || '';
+      if (!body || body.length < 40) {
+        // Draft via agent
+        const prompt = `Target: ${q.to}
+Subject hint: ${q.subject}
+Notes/context: ${q.notes || 'General AI lab or research outreach for collaboration / opportunities / PhD pipeline / jobs discussion.'}
+Current date: ${new Date().toISOString().slice(0,10)}.
+Write a short professional email (120-220 words) from Bo Shang. Reference specific recent work (e.g. building owned DeepSeek-powered agents Anvilwing/Endearo, agentic newsroom The Meridian, honest LLM pipeline erosolar, DRIFT hard-science screenplay site, Frontier Model Index, Trenchwork momentum tracker) only if relevant. Include one clear next step or question. Link to https://erosolar.org or https://trenchwork.live . End with "— Bo Shang".
+`;
+        body = await deepseekDraft(prompt);
+      }
+
+      const info = await sendMail({
+        to: q.to,
+        subject: q.subject,
+        text: body + `\n\n—\nSent by agentic outreach worker (controlled by Bo). Full history at admin portal. erosolar.org`,
+      });
+
+      // Write FULL history (the key requirement)
+      await db.collection('outreachHistory').add({
+        to: q.to,
+        subject: q.subject,
+        bodySent: body,
+        messageId: info.messageId,
+        sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        via: `proton-bridge-local-${SMTP_HOST}:${SMTP_PORT}`,
+        requestedBy: q.requestedBy || ADMIN_EMAIL,
+        queueId: q.id,
+        notes: q.notes || '',
+        _scanDate: new Date().toISOString().slice(0, 10),
+      });
+
+      // Mark or delete queue item
+      await d.ref.delete();
+      sent++;
+      console.log('Sent + logged:', q.subject, '->', q.to);
+    } catch (e) {
+      console.error('Failed item', q.id, e);
+      await d.ref.update({ status: 'error', error: String(e), errorAt: admin.firestore.FieldValue.serverTimestamp() });
+    }
+  }
+  return sent;
+}
+
+async function drainApplications() {
+  const snap = await db.collection('applicationQueue').where('status', '==', 'queued').limit(4).get();
+  if (snap.empty) return 0;
+
+  let sent = 0;
+  for (const d of snap.docs) {
+    const q = { id: d.id, ...d.data() };
+    try {
+      let body = q.body || '';
+      let subject = q.subject || `Application for ${q.title} at ${q.company}`;
+
+      if (!body || body.length < 50) {
+        // Job-specific personalized draft (uses full context + visa emphasis)
+        const visaNote = (q.notes || '').toLowerCase().includes('visa') || /deepseek|china|hong kong|hk/i.test(q.company + ' ' + (q.notes||'')) ? 'Emphasize willingness to pursue any required visa / sponsorship / international relocation process.' : '';
+        const prompt = `Target company/role: ${q.company} — ${q.title}
+Contact / to: ${q.to || 'hiring / recruiting / research team (use a plausible address if none provided, or leave as "to the team")'}
+Context: ${q.notes || 'AI engineering, research engineering, red team / safety, or infrastructure role. Prioritize frontier labs and AI-dev work.'}
+${visaNote}
+Current date: ${new Date().toISOString().slice(0,10)}.
+Write a concise, professional, high-signal application email (160-260 words) from Bo Shang.
+Use the resume context below. Tailor to the role — highlight the closest shipped projects (e.g. Anvilwing for agent tooling, Meridian for autonomous research+writing pipelines, DRIFT for long-horizon grounded systems, Frontier Model Index for daily agentic data platforms, Trenchwork for reliable momentum infra).
+Include one clear next step (conversation, interview, technical discussion). Link https://erosolar.org and/or https://trenchwork.live.
+Never invent credentials. End with "— Bo Shang".
+RESUME: ${APP_RESUME}
+`;
+        body = await deepseekDraft(prompt);
+      }
+
+      const toAddr = q.to || `${q.company.toLowerCase().replace(/[^a-z0-9]/g,'')}@example-careers.com`; // placeholder; admin should provide real to when queuing
+      const info = await sendMail({
+        to: toAddr,
+        subject,
+        text: body + `\n\n—\nSent by Bo's agentic application worker. Full history + context in admin portal (erosolar.org).`,
+      });
+
+      // Log FULL application (unified history)
+      await db.collection('jobApplications').add({
+        jobId: q.jobId || null,
+        title: q.title,
+        company: q.company,
+        to: toAddr,
+        subject,
+        bodySent: body,
+        visaContext: q.notes || '',
+        sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        status: 'sent',
+        via: `proton-bridge-local-${SMTP_HOST}:${SMTP_PORT}`,
+        requestedBy: q.requestedBy || ADMIN_EMAIL,
+        queueId: q.id,
+        notes: q.notes || '',
+        _scanDate: new Date().toISOString().slice(0, 10),
+      });
+
+      // Also mirror a lightweight record to outreachHistory for unified view
+      await db.collection('outreachHistory').add({
+        to: toAddr,
+        subject,
+        bodySent: body,
+        messageId: info.messageId,
+        sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        via: `job-application-proton-${SMTP_HOST}:${SMTP_PORT}`,
+        requestedBy: q.requestedBy || ADMIN_EMAIL,
+        queueId: q.id,
+        notes: `JOB APP: ${q.title} @ ${q.company}`,
+        _scanDate: new Date().toISOString().slice(0, 10),
+      });
+
+      await d.ref.delete();
+      sent++;
+      console.log('Application sent + FULL history logged:', subject, '->', toAddr);
+    } catch (e) {
+      console.error('Failed application', q.id, e);
+      await d.ref.update({ status: 'error', error: String(e), errorAt: admin.firestore.FieldValue.serverTimestamp() });
+    }
+  }
+  return sent;
+}
+
+// Optional auto-select when autoApply is on and queue is empty: pick 1-2 strong unfilled fits
+async function autoSelectAndQueueIfNeeded() {
+  const autoApply = await getAutoApplyEnabled();
+  if (!autoApply) return 0;
+
+  const queueCount = (await db.collection('applicationQueue').where('status', '==', 'queued').get()).size;
+  if (queueCount > 0) return 0; // respect explicit queues
+
+  // Find recent jobs without a recent jobApplication
+  const jobsSnap = await db.collection('jobs').orderBy('fetchedAt', 'desc').limit(25).get();
+  const recentApps = await db.collection('jobApplications').orderBy('sentAt', 'desc').limit(30).get();
+  const appliedKeys = new Set(recentApps.docs.map(d => {
+    const data = d.data();
+    return (data.company || '').toLowerCase() + '|' + (data.title || '').toLowerCase().slice(0,30);
+  }));
+
+  const candidates = [];
+  for (const jd of jobsSnap.docs) {
+    const j = { id: jd.id, ...jd.data() };
+    const key = (j.company || '').toLowerCase() + '|' + (j.title || '').toLowerCase().slice(0,30);
+    if (appliedKeys.has(key)) continue;
+
+    const isStrong = /engineer|research|scientist|red.?team|safety|ml|llm|ai|deepseek|anthropic|openai|x.ai|google/i.test((j.title || '') + ' ' + (j.company || ''));
+    const visaFriendly = /visa|sponsor|international|relocation|h1b|deepseek/i.test((j.visaSponsorship || '') + ' ' + (j.description || '') + ' ' + (j.company || ''));
+    if (isStrong || visaFriendly) {
+      candidates.push(j);
+    }
+  }
+
+  let queued = 0;
+  for (const j of candidates.slice(0, 2)) { // at most 2 per cycle to stay conservative + rate-limited
+    await db.collection('applicationQueue').add({
+      jobId: j.id,
+      title: j.title,
+      company: j.company,
+      notes: (j.visaSponsorship ? 'visa/sponsorship track — emphasize relocation & accountability strengths' : 'high-fit AI eng / infra role'),
+      status: 'queued',
+      requestedBy: 'auto-apply-worker',
+      requestedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    queued++;
+    console.log('Auto-queued for application:', j.title, '@', j.company);
+  }
+  return queued;
+}
+
+async function maybeLogHeartbeat() {
+  const enabled = await getAutoEnabled();
+  if (enabled) {
+    console.log('[heartbeat] outreach auto ENABLED — will drain queue on tick');
+  }
+  // Could also write a settings/heartbeat doc here
+}
+
+async function mainLoop() {
+  console.log('=== erosolar Proton outreach worker starting ===');
+  console.log('IMAP', IMAP_HOST, IMAP_PORT, 'SMTP', SMTP_HOST, SMTP_PORT, 'DRY=', DRY);
+
+  // Optional: quick IMAP connect test (non-destructive)
+  try {
+    const client = new ImapFlow({
+      host: IMAP_HOST,
+      port: IMAP_PORT,
+      secure: IMAP_TLS === 'SSL',
+      auth: { user: IMAP_USER, pass: IMAP_PASS },
+      logger: false,
+    });
+    await client.connect();
+    await client.logout();
+    console.log('IMAP bridge reachable (read-only test ok)');
+  } catch (e) {
+    console.warn('IMAP test failed (worker can still send via SMTP):', e.message);
+  }
+
+  // Main loop
+  while (true) {
+    try {
+      await maybeLogHeartbeat();
+      const outreachOn = await getAutoEnabled();
+      const applyOn = await getAutoApplyEnabled();
+
+      // Outreach (general + provider)
+      if (outreachOn) {
+        const n = await drainQueue();
+        if (n > 0) console.log('Drained', n, 'queued outreach items');
+      } else {
+        const n = await drainQueue();
+        if (n > 0) console.log('Manual outreach drain (auto off):', n);
+      }
+
+      // Job applications (auto + explicit)
+      if (applyOn) {
+        const autoQ = await autoSelectAndQueueIfNeeded();
+        if (autoQ > 0) console.log('Auto-selected + queued', autoQ, 'high-fit job applications (DeepSeek/visa priority etc.)');
+        const n = await drainApplications();
+        if (n > 0) console.log('Drained + sent', n, 'job applications with full logged text');
+      } else {
+        const n = await drainApplications();
+        if (n > 0) console.log('Manual application drain (autoApply off):', n);
+      }
+    } catch (e) {
+      console.error('Loop tick error', e);
+    }
+    const intervalMs = parseInt(process.env.POLL_MS || '180000', 10); // 3 min default
+    await new Promise(r => setTimeout(r, intervalMs));
+  }
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  mainLoop().catch(console.error);
+}

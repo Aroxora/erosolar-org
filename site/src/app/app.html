@@ -1,146 +1,76 @@
-<!-- progress bar -->
+<!-- progress -->
 <div class="progress"><i #progress></i></div>
 
-<!-- ── nav ───────────────────────────────────────────────────────────── -->
-<header class="nav" #navbar>
-  <a class="brand" href="#top" aria-label="Bo Shang — home">
+<!-- TOPBAR with login / portal / chatbot (the key requirement) -->
+<header class="nav topbar" #navbar>
+  <a class="brand" routerLink="/" aria-label="erosolar.org — home">
     <span class="brand__mark" aria-hidden="true"></span>
-    <span class="brand__name">Bo&nbsp;Shang</span>
-    <span class="brand__dom">trenchwork</span>
+    <span class="brand__name">erosolar.org</span>
+    <span class="brand__dom">AGENTIC BUILDER</span>
   </a>
+
   <nav class="nav__links">
-    @for (item of nav; track item.id) {
-      <a [href]="'#' + item.id" [attr.data-spy]="item.id">{{ item.label }}</a>
+    @for (item of nav; track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{exact: item.path==''}">{{ item.label }}</a>
     }
   </nav>
-  <a class="nav__cta" href="#contact">Get in touch</a>
+
+  <div class="nav__right">
+    <!-- Login status + portal + controls (admin only features gated in UI + backend) -->
+    @if (auth.isLoggedIn()) {
+      <span class="who" [class.admin]="auth.isAdmin()">
+        {{ auth.user()?.email || 'signed in' }}
+        @if (auth.isAdmin()) { <small>admin</small> }
+      </span>
+
+      @if (auth.isAdmin()) {
+        <button class="nav__cta small" (click)="toggleOutreach()">Toggle outreach</button>
+        <button class="nav__cta small" (click)="toggleAutoApply()">Toggle auto-apply</button>
+        <button class="nav__cta small" (click)="openChat()">Chatbot</button>
+        <a class="nav__cta small" routerLink="/applications">Applications</a>
+      }
+      <button class="nav__cta small" (click)="signOut()">Sign out</button>
+    } @else {
+      <button class="nav__cta" (click)="signIn()">Sign in with Google (admin)</button>
+    }
+
+    <a class="nav__cta" routerLink="/jobs">Jobs</a>
+    <a class="nav__cta small" href="https://github.com/aroxora" target="_blank" rel="noopener" aria-label="GitHub">GitHub</a>
+    <a class="nav__cta small" href="https://www.linkedin.com/in/bo-shang-04923b3a6" target="_blank" rel="noopener" aria-label="LinkedIn">LinkedIn</a>
+  </div>
 </header>
 
 <main>
-  <!-- ── hero ────────────────────────────────────────────────────────── -->
-  <section id="top" class="hero" #hero>
+  <!-- Compact hero on non-home (the canvas lives here for home feel) -->
+  <section id="top" class="hero mini" #hero>
     <canvas class="hero__field" #field aria-hidden="true"></canvas>
     <div class="hero__light" aria-hidden="true"></div>
-    <div class="hero__sun" aria-hidden="true"></div>
-
     <div class="hero__inner">
-      <p class="eyebrow reveal" data-reveal>
-        <span class="eyebrow__dot"></span> Bo Shang &nbsp;·&nbsp; Software engineer &nbsp;·&nbsp; trenchwork.org
-      </p>
-      <!-- EDIT: your headline. Wrap one word in <em> for the accent. -->
-      <h1 class="hero__title reveal" data-reveal>
-        I build the parts<br />that have to <em>hold.</em>
-      </h1>
-      <p class="hero__lead reveal" data-reveal>
-        I’m Bo Shang — a software engineer who likes the trenchwork: the
-        unglamorous, load-bearing parts that make a system reliable. Clear code,
-        honest systems, built to last.
-      </p>
-      <div class="hero__actions reveal" data-reveal>
-        <a class="btn btn--solar" href="#work">See the work</a>
-        <a class="btn btn--ghost" href="mailto:bo@trenchwork.org">bo&#64;trenchwork.org</a>
-      </div>
-    </div>
-
-    <a class="hero__scroll" href="#work" aria-label="Scroll to work">
-      <span></span> scroll
-    </a>
-  </section>
-
-  <!-- ── marquee ─────────────────────────────────────────────────────── -->
-  <div class="marquee" aria-hidden="true">
-    <div class="marquee__track">
-      @for (n of [0, 1]; track n) {
-        <span>Software</span><b>✦</b><span>Systems</span><b>✦</b><span>Web &amp; Cloud</span><b>✦</b>
-        <span>Infrastructure</span><b>✦</b><span>Automation</span><b>✦</b><span>Reliability</span><b>✦</b>
-      }
-    </div>
-  </div>
-
-  <!-- ── work ────────────────────────────────────────────────────────── -->
-  <section id="work" class="section">
-    <div class="section__head reveal" data-reveal>
-      <p class="kicker">/ selected work</p>
-      <h2 class="section__title">Things I’ve built</h2>
-    </div>
-    <div class="work">
-      @for (p of projects; track p.name; let i = $index) {
-        <a class="card" [attr.href]="p.href || null" [class.card--link]="p.href" data-reveal>
-          <span class="card__index">{{ '0' + (i + 1) }}</span>
-          <span class="card__meta">{{ p.meta }}</span>
-          <h3 class="card__name">{{ p.name }}</h3>
-          <p class="card__blurb">{{ p.blurb }}</p>
-          <span class="card__go" aria-hidden="true">→</span>
-        </a>
-      }
-    </div>
-  </section>
-
-  <!-- ── focus ───────────────────────────────────────────────────────── -->
-  <section id="focus" class="section section--alt">
-    <div class="section__head reveal" data-reveal>
-      <p class="kicker">/ focus</p>
-      <h2 class="section__title">What I work on</h2>
-    </div>
-    <div class="focus">
-      @for (f of focus; track f.tag) {
-        <div class="focus__row" data-reveal>
-          <span class="focus__tag">{{ f.tag }}</span>
-          <h3 class="focus__label">{{ f.label }}</h3>
-          <p class="focus__body">{{ f.body }}</p>
-        </div>
-      }
-    </div>
-  </section>
-
-  <!-- ── about ───────────────────────────────────────────────────────── -->
-  <section id="about" class="section">
-    <div class="about">
-      <div class="section__head reveal" data-reveal>
-        <p class="kicker">/ about</p>
-        <h2 class="section__title">A little context</h2>
-      </div>
-      <!-- EDIT: make this yours — honest, brief, forward-looking. -->
-      <div class="about__body reveal" data-reveal>
-        <p>
-          I’m Bo Shang. I build software and run <strong>trenchwork.org</strong> —
-          my focus is shipping reliable, well-made things and steadily getting
-          better at the craft.
-        </p>
-        <p>
-          I like the work other people skip: the foundations, the edge cases, the
-          unglamorous plumbing that decides whether a system actually holds up.
-          Always glad to talk shop or about new work.
-        </p>
+      <p class="eyebrow"><span class="eyebrow__dot"></span> erosolar.org · AGENTIC BUILDER</p>
+      <h1 class="hero__title" style="font-size:clamp(1.9rem,5.2vw,3.6rem)">The parts that have to hold.</h1>
+      <div style="margin-top:.8rem">
+        <a class="btn btn--solar" routerLink="/">Home + résumé</a>
+        <a class="btn btn--ghost" routerLink="/tracker">Live trackers</a>
       </div>
     </div>
   </section>
 
-  <!-- ── contact ─────────────────────────────────────────────────────── -->
-  <section id="contact" class="section section--alt contact">
-    <div class="reveal" data-reveal>
-      <p class="kicker kicker--center">/ contact</p>
-      <h2 class="contact__title">Let’s build something that holds.</h2>
-      <p class="contact__lead">Open to good work and good conversations.</p>
+  <!-- Routed content: Home (with rich résumé + mental health), Work, Blog/Log, Tracker, Jobs -->
+  <router-outlet></router-outlet>
 
-      <ul class="contact__list">
-        @for (c of contacts; track c.value) {
-          <li class="contact__item" data-reveal>
-            <a [href]="c.href">
-              <span class="contact__kind">{{ c.kind }}</span>
-              <span class="contact__value">{{ c.value }}</span>
-              <span class="contact__go" aria-hidden="true">→</span>
-            </a>
-          </li>
-        }
-      </ul>
-    </div>
-  </section>
+  <!-- Chat host lives in the corner when opened from topbar -->
+  <div #chatHost></div>
 </main>
 
-<!-- ── footer ─────────────────────────────────────────────────────────── -->
 <footer class="footer">
-  <span>© {{ year }} Bo Shang · trenchwork</span>
+  <span>© {{ year }} Bo Shang · trenchwork · erosolar.org</span>
   <span class="footer__time"><i class="footer__dot"></i> local time <b #clock>—</b></span>
-  <span>Built with Angular &amp; Firebase</span>
+  <span>
+    Angular + Firebase · agentic (DeepSeek-v4-pro + Tavily)
+    <span style="margin-left:.6rem">
+      <a href="https://github.com/aroxora" target="_blank" rel="noopener">GitHub</a>
+      ·
+      <a href="https://www.linkedin.com/in/bo-shang-04923b3a6" target="_blank" rel="noopener">LinkedIn</a>
+    </span>
+  </span>
 </footer>

@@ -1,0 +1,123 @@
+<section class="hero-home">
+  <!-- keep the original beautiful hero spirit but slimmed for home focus -->
+  <div class="hero-inner">
+    <p class="eyebrow"><span class="dot"></span> erosolar.org &nbsp;·&nbsp; AGENTIC BUILDER</p>
+    <h1 class="title">I build the parts<br>that have to <em>hold.</em></h1>
+    <p class="lead">Full-stack systems, agentic infrastructure, and the unglamorous load-bearing work. Deep experience owning the entire loop: from local daemons and desktop agents to multi-platform apps and daily autonomous research/news/coding pipelines powered by frontier models I control.</p>
+
+    <div class="actions">
+      <a class="btn btn-solar" routerLink="/work">See the projects</a>
+      <a class="btn btn-ghost" href="#resume">Jump to résumé</a>
+    </div>
+  </div>
+</section>
+
+<div class="marquee" aria-hidden="true">
+  <div class="track">
+    <span>Agentic systems</span><b>✦</b><span>DeepSeek + Tavily</span><b>✦</b><span>Owned infrastructure</span><b>✦</b>
+    <span>Firebase + Cloud Functions</span><b>✦</b><span>Go + SwiftUI + Angular</span><b>✦</b><span>Reliable momentum</span>
+  </div>
+</div>
+
+<section id="resume" class="section">
+  <div class="section-head">
+    <p class="kicker">/ résumé &amp; accomplishments</p>
+    <h2 class="title">What I’ve actually shipped</h2>
+    <p class="sub">All numbers and claims are from measured, live, or source-verifiable artifacts in the repos below (described by purpose, not folder names). Auto-refreshed agentically with dated entries.</p>
+  </div>
+
+  <div class="resume-grid">
+    @for (r of resume; track r.period) {
+      <div class="resume-card" data-reveal>
+        <div class="meta">
+          <span class="period">{{ r.period }}</span>
+          <span class="org">{{ r.org }}</span>
+        </div>
+        <h3 class="role">{{ r.role }}</h3>
+        <p class="impact">{{ r.impact }}</p>
+        <div class="tech">
+          @for (t of r.tech; track t) {
+            <span class="tag">{{ t }}</span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="note">
+    <p><strong>Live sites &amp; repos (all public where deployed):</strong> erosolar.org (this site), trenchwork.live, the-meridian.live, boshangadhd.com (Endearo), erosolar-llm.web.app, drift-by-bo.web.app, the three Frontier Model Index apps, npm: anvilwing / trenchwork-coder.</p>
+  </div>
+</section>
+
+<section id="mental" class="section section-alt">
+  <div class="section-head">
+    <p class="kicker">/ mental health &amp; forward momentum</p>
+    <h2 class="title">Treating life infrastructure like engineering</h2>
+  </div>
+
+  <div class="mental-grid">
+    @for (m of mental; track m.title) {
+      <div class="mental-card">
+        <h3>{{ m.title }}</h3>
+        <p>{{ m.body }}</p>
+      </div>
+    }
+  </div>
+
+  <div class="cta">
+    <p>The same agentic discipline (memory, verification, small verifiable steps, disclosure) that makes the public creative work reliable also powers the private systems for habits, outreach, and evaluation logistics. Everything is designed to be auditable by me and, where I choose, by others.</p>
+    <p class="small" style="margin-top:.6rem">Agentic job applications + outreach are active and controllable (auto mode via local Proton worker + DeepSeek personalization using the full project history). Admin controls live in the topbar and /applications.</p>
+    <a class="btn btn-ghost" routerLink="/tracker">See live trackers (jobs + PhD programs)</a>
+    <a class="btn btn-ghost" routerLink="/jobs" style="margin-left:.5rem">Browse + apply</a>
+  </div>
+</section>
+
+<!-- NEW: Agentic Learning highlight -->
+<section id="learning" class="section section--alt">
+  <div class="section__head reveal" data-reveal>
+    <p class="kicker">/ agentic learning</p>
+    <h2 class="section__title">Rapid, verifiable skill acquisition at scale</h2>
+  </div>
+
+  <div class="learning-grid">
+    <div class="learning-card" data-reveal>
+      <h3>Build to learn</h3>
+      <p>I accelerate mastery by shipping real agentic systems. <strong>Anvilwing</strong> (owned DeepSeek 1M-context coding agent with verifier) was built to internalize frontier agent patterns. <strong>Endearo</strong> was built to master reliable inbox-to-action loops and personal operating systems. Each major project (The Meridian autonomous newsroom, DRIFT video+Living Science pipeline, Frontier Model Index daily updater, erosolar honest LLM work, Trenchwork momentum tracker) required deep, cross-domain learning — executed through the same Tavily + DeepSeek-v4-pro grounded agent loops used on this site.</p>
+    </div>
+
+    <div class="learning-card" data-reveal>
+      <h3>Agentic by default</h3>
+      <p>Learning is treated as a production system: search → synthesize → verify → prototype → ship → log. The live job/PhD trackers, auto-application worker, admin chatbot, and this very portfolio were created and are maintained using these patterns. History is stored, drafts are auditable, and the process compounds. This is not passive consumption — it is active, tool-augmented construction of capability.</p>
+    </div>
+
+    <div class="learning-card" data-reveal>
+      <h3>Cross-repo evidence</h3>
+      <p>Across the public body of work (described by purpose on the Work page): honest small CoT LLM training with grounded verification, fully autonomous multi-platform newspaper, cinematic hard-science ecosystem with long-horizon video generation, work-momentum desktop + wearables system, and personal AI life infrastructure. All shipped while simultaneously operating agentic tools for research, code, and life operations. Demonstrated ability to enter new technical domains and reach production quality quickly and reliably.</p>
+    </div>
+  </div>
+
+  <div class="learning-cta">
+    <p class="small">See the concrete systems and their agentic underpinnings on the <a routerLink="/work">Work</a> page. The same DeepSeek + Tavily + local worker patterns that power the trackers and applications here are the tools I use to learn and build at speed.</p>
+  </div>
+</section>
+
+<section class="section contact-mini">
+  <p class="kicker">/ next step</p>
+  <h2>Open to strong AI engineering, red-team, research engineering, or infrastructure roles — including international with visa support.</h2>
+  <div class="links">
+    <a href="mailto:{{ contact.email }}">{{ contact.email }}</a>
+    <span>·</span>
+    <a href="mailto:{{ contact.alt }}">{{ contact.alt }}</a>
+    <span>·</span>
+    <a href="tel:+15082600326">{{ contact.phone }}</a>
+    <span>·</span>
+    <a [href]="contact.linkedin" target="_blank" rel="noopener">LinkedIn</a>
+    <span>·</span>
+    <a [href]="contact.github" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <p class="profiles-note">
+    <strong>Best LinkedIn handle to claim:</strong> 
+    <a href="https://www.linkedin.com/in/boshang/" target="_blank" rel="noopener">linkedin.com/in/boshang/</a> 
+    (clean, professional, memorable vanity URL — strongly recommended over the current /in/bo-shang-04923b3a6)
+  </p>
+</section>

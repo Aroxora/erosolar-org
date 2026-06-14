@@ -565,3 +565,12 @@
     animation: pulse 4s ease-in-out infinite;
   }
 }
+
+/* topbar auth / portal / chatbot bits */
+.topbar .nav__right { display: inline-flex; align-items: center; gap: .6rem; }
+.who { font-family: var(--mono); font-size: .72rem; color: var(--muted); padding: .15rem .5rem; border: 1px solid var(--line); border-radius: 999px; }
+.who.admin { border-color: var(--solar); color: var(--solar); }
+.nav__cta.small { font-size: .7rem; padding: .3rem .65rem; }
+.hero.mini { min-height: 38svh; padding-top: 5.5rem; padding-bottom: 1.6rem; }
+.hero.mini .hero__title { font-size: clamp(1.9rem, 5.2vw, 3.4rem); margin-top: .3rem; }
+.hero.mini .hero__inner { max-width: 820px; }
