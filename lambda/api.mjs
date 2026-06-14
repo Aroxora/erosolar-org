@@ -41,6 +41,10 @@ export const handler = async (event) => {
   let body0 = {};
   try { body0 = JSON.parse(event.isBase64Encoded ? Buffer.from(event.body || '', 'base64').toString('utf8') : (event.body || '{}')); } catch {}
 
+  // Per-request runtime overrides from the top-bar picker (model + search provider).
+  if (body0.model) process.env.DEEPSEEK_MODEL = String(body0.model);
+  if (body0.provider) process.env.SEARCH_PROVIDER = String(body0.provider);
+
   // ── PUBLIC route: /translate (visitors translate the UI; no admin token) ──
   if (path0.replace(/\/+$/, '').endsWith('/translate')) {
     try { return reply(200, { map: await translateTexts(body0.texts, body0.target || 'zh') }); }

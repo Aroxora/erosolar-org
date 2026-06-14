@@ -76,6 +76,17 @@ export class FirestoreService {
   async getOutreachAuto(): Promise<boolean> { return !!(await getDoc(doc(db, 'settings/outreach'))).data()?.['autoEnabled']; }
   async getAutoApply(): Promise<boolean> { return !!(await getDoc(doc(db, 'settings/autoApply'))).data()?.['enabled']; }
 
+  // ── runtime picker (model + search provider) — threaded into every Lambda call ──
+  runtime = { model: 'deepseek-v4-pro', provider: 'tavily' };
+  async loadRuntime() {
+    try { const d: any = (await getDoc(doc(db, 'settings', 'runtime'))).data(); if (d) this.runtime = { model: d.model || this.runtime.model, provider: d.provider || this.runtime.provider }; } catch {}
+    return this.runtime;
+  }
+  async setRuntime(model: string, provider: string) {
+    this.runtime = { model, provider };
+    await setDoc(doc(db, 'settings', 'runtime'), { model, provider, updatedBy: this.adminEmail(), updatedAt: serverTimestamp() }, { merge: true });
+  }
+
   // ── Lambda compute API (admin-only; verified by Firebase ID token) ─────────
   private adminEmail(): string { return (auth.currentUser?.email || '').toLowerCase(); }
   private async idToken(): Promise<string> {
@@ -89,7 +100,7 @@ export class FirestoreService {
     const r = await fetch(LAMBDA_API_BASE + path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(body || {}),
+      body: JSON.stringify({ ...this.runtime, ...(body || {}) }),
     });
     if (!r.ok) {
       const e = await r.json().catch(() => ({ error: r.statusText }));

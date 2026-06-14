@@ -50,7 +50,13 @@ export async function deepseekChat(messages, { temperature = 0.2, max_tokens = 8
   return j.choices?.[0]?.message?.content || '';
 }
 
+// Provider-switchable web search. SEARCH_PROVIDER=searxng (+ SEARXNG_URL) routes to a
+// self-hosted SearXNG (Cloud Run / EC2) — the proprietary, ~$0-idle Tavily replacement;
+// otherwise Tavily. Both return the same { results:[{title,url,content}], answer } shape.
 export async function tavilySearch(query, { maxResults = 8, searchDepth = 'advanced' } = {}) {
+  if ((process.env.SEARCH_PROVIDER || 'tavily').toLowerCase() === 'searxng' && process.env.SEARXNG_URL) {
+    return searxngSearch(query, { maxResults });
+  }
   const key = process.env.TAVILY_API_KEY;
   if (!key) throw new Error('Missing TAVILY_API_KEY');
   const r = await fetch(TAVILY_ENDPOINT, {
@@ -60,6 +66,19 @@ export async function tavilySearch(query, { maxResults = 8, searchDepth = 'advan
   });
   if (!r.ok) throw new Error(`Tavily ${r.status}: ${(await r.text()).slice(0, 200)}`);
   return r.json();
+}
+
+// Self-hosted SearXNG JSON API → Tavily-shaped result. Set SEARXNG_URL (+ optional
+// SEARXNG_TOKEN as a Bearer for a protected instance).
+export async function searxngSearch(query, { maxResults = 8 } = {}) {
+  const base = (process.env.SEARXNG_URL || '').replace(/\/+$/, '');
+  if (!base) throw new Error('Missing SEARXNG_URL');
+  const u = `${base}/search?q=${encodeURIComponent(query)}&format=json&safesearch=0&language=en`;
+  const r = await fetch(u, { headers: process.env.SEARXNG_TOKEN ? { Authorization: `Bearer ${process.env.SEARXNG_TOKEN}` } : {} });
+  if (!r.ok) throw new Error(`SearXNG ${r.status}: ${(await r.text()).slice(0, 160)}`);
+  const d = await r.json();
+  const results = (d.results || []).slice(0, maxResults).map((x) => ({ title: x.title, url: x.url, content: x.content || x.snippet || '' }));
+  return { results, answer: (d.answers && d.answers[0]) || '' };
 }
 
 function stripJson(s) { return String(s || '').replace(/```json|```/g, '').trim(); }

@@ -6,6 +6,8 @@ import {
   OnDestroy,
   NgZone,
   inject,
+  signal,
+  effect,
   ViewContainerRef,
   createComponent,
   EnvironmentInjector,
@@ -37,6 +39,9 @@ export class App implements AfterViewInit, OnDestroy {
   private seo = inject(SeoService);
   lang = inject(LangService);
 
+  // Runtime picker (admin): model + search provider, persisted to settings/runtime.
+  rt = signal({ model: 'deepseek-v4-pro', provider: 'tavily' });
+
   constructor() {
     // Per-route SEO + re-translate the freshly-rendered page (if a language is set).
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
@@ -46,7 +51,12 @@ export class App implements AfterViewInit, OnDestroy {
       if (seo) this.seo.update(seo);
       this.lang.refresh();
     });
+    // Load the persisted runtime picker once the admin is signed in.
+    effect(() => { if (this.auth.isAdmin()) this.fs.loadRuntime().then((r) => this.rt.set({ ...r })); });
   }
+
+  pickModel(m: string) { this.rt.set({ ...this.rt(), model: m }); this.fs.setRuntime(m, this.rt().provider).catch(() => {}); }
+  pickProvider(p: string) { this.rt.set({ ...this.rt(), provider: p }); this.fs.setRuntime(this.rt().model, p).catch(() => {}); }
 
   @ViewChild('field') private fieldRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('hero') private heroRef?: ElementRef<HTMLElement>;

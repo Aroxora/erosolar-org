@@ -594,6 +594,8 @@
 }
 .pill:hover { border-color: var(--amber); color: var(--ink); background: rgba(255, 159, 69, 0.08); }
 .pill--ghost { background: transparent; color: var(--muted); }
+.rt-sel { font-family: var(--mono); font-size: .68rem; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: .26rem .5rem; cursor: pointer; }
+.rt-sel:hover { border-color: var(--amber); }
 
 /* Google sign-in — Google-brand white button: instantly recognizable + high contrast on the dark bar */
 .gsi {

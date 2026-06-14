@@ -33,6 +33,14 @@
       </span>
 
       @if (auth.isAdmin()) {
+        <select class="rt-sel notranslate" [value]="rt().model" (change)="pickModel($any($event.target).value)" title="Runtime model" aria-label="Model">
+          <option value="deepseek-v4-pro">DeepSeek v4 Pro</option>
+          <option value="deepseek-v4-flash">DeepSeek v4 Flash</option>
+        </select>
+        <select class="rt-sel notranslate" [value]="rt().provider" (change)="pickProvider($any($event.target).value)" title="Search provider" aria-label="Search">
+          <option value="tavily">Tavily</option>
+          <option value="searxng">SearXNG</option>
+        </select>
         <button class="pill" (click)="openChat()">Chatbot</button>
         <a class="pill" routerLink="/apply">Apply</a>
         <a class="pill" routerLink="/applications">Applications</a>

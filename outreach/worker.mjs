@@ -52,6 +52,10 @@ const SMTP_SECURE = (process.env.SMTP_SECURE || 'false').toLowerCase() === 'true
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY || '';
 
+// Max OUTREACH emails (to third parties) sent per calendar day. Anything over the cap
+// stays queued and goes out the next day. Owner-notices to yourself are NOT capped.
+const DAILY_EMAIL_CAP = parseInt(process.env.DAILY_EMAIL_CAP || '25', 10);
+
 if (!DEEPSEEK_API_KEY) console.warn('[worker] DEEPSEEK_API_KEY not set — drafting will fail until you fill outreach/.env');
 if (!IMAP_PASS && !DRY) console.warn('[worker] IMAP_PASS/SMTP_PASS not set — sending will fail until you fill outreach/.env (or run DRY_RUN=true)');
 
@@ -481,12 +485,32 @@ async function autoFixDependabot() {
   }
 }
 
+// ── Daily outreach send cap — anything over the cap rolls to the next day ────
+async function sentTodayCount() {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const d = (await db.collection('settings').doc('sendCounter').get()).data() || {};
+    return d.date === today ? (d.count || 0) : 0;
+  } catch { return 0; }
+}
+async function capReached() { return (await sentTodayCount()) >= DAILY_EMAIL_CAP; }
+async function bumpSentToday() {
+  const today = new Date().toISOString().slice(0, 10);
+  const ref = db.collection('settings').doc('sendCounter');
+  await db.runTransaction(async (tx) => {
+    const d = (await tx.get(ref)).data() || {};
+    const base = d.date === today ? (d.count || 0) : 0; // resets automatically on a new day
+    tx.set(ref, { date: today, count: base + 1, cap: DAILY_EMAIL_CAP, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  });
+}
+
 async function drainQueue() {
   const snap = await db.collection('outreachQueue').where('status', '==', 'queued').limit(5).get();
   if (snap.empty) return 0;
 
   let sent = 0;
   for (const d of snap.docs) {
+    if (await capReached()) { console.log(`[cap] daily email cap (${DAILY_EMAIL_CAP}) reached — remaining outreach stays queued for tomorrow`); break; }
     const q = { id: d.id, ...d.data() };
     try {
       // Agentic grounding: Tavily research on the target + RAG over past outreach.
@@ -510,6 +534,7 @@ Write a short professional email (120-220 words) from Bo Shang. Reference specif
         subject: q.subject,
         text: body + `\n\n—\nSent by agentic outreach worker (controlled by Bo). Full history at admin portal. erosolar.org`,
       });
+      if (!DRY) await bumpSentToday();
 
       // Write FULL history + RAG embedding (Firestore = history; vec = retrieval).
       const sentEmb = await embed(`${q.subject}\n${body}`);
@@ -548,6 +573,7 @@ async function drainApplications() {
 
   let sent = 0;
   for (const d of snap.docs) {
+    if (await capReached()) { console.log(`[cap] daily email cap (${DAILY_EMAIL_CAP}) reached — remaining applications stay queued for tomorrow`); break; }
     const q = { id: d.id, ...d.data() };
     try {
       let body = q.body || '';
@@ -576,6 +602,7 @@ RESUME: ${APP_RESUME}
         subject,
         text: body + `\n\n—\nSent by Bo's agentic application worker. Full history + context in admin portal (erosolar.org).`,
       });
+      if (!DRY) await bumpSentToday();
 
       // Log FULL application (unified history)
       await db.collection('jobApplications').add({
