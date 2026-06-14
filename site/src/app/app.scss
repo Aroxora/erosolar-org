@@ -566,11 +566,76 @@
   }
 }
 
-/* topbar auth / portal / chatbot bits */
-.topbar .nav__right { display: inline-flex; align-items: center; gap: .6rem; }
-.who { font-family: var(--mono); font-size: .72rem; color: var(--muted); padding: .15rem .5rem; border: 1px solid var(--line); border-radius: 999px; }
-.who.admin { border-color: var(--solar); color: var(--solar); }
-.nav__cta.small { font-size: .7rem; padding: .3rem .65rem; }
+/* ── topbar auth / portal / controls ─────────────────────────────────── */
+.topbar .nav__right { display: inline-flex; align-items: center; gap: .5rem; flex-shrink: 0; }
+
+/* signed-in identity chip */
+.who {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-family: var(--mono); font-size: .72rem; color: var(--ink-2);
+  padding: .3rem .6rem; border: 1px solid var(--line); border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02); max-width: 240px;
+}
+.who__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+.who__email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.who--admin { border-color: var(--solar); color: var(--ink); }
+.who--admin .who__dot { background: var(--solar); box-shadow: 0 0 8px var(--solar); }
+.who__badge {
+  font-size: .56rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 600;
+  color: #21120a; background: var(--solar-grad); padding: .06rem .35rem; border-radius: 4px;
+}
+
+/* compact action pills (admin controls + sign out) */
+.pill {
+  font-family: var(--mono); font-size: .7rem; letter-spacing: .02em;
+  padding: .34rem .7rem; border-radius: 999px; cursor: pointer; white-space: nowrap; text-decoration: none;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+  transition: border-color .25s ease, color .25s ease, background .25s ease;
+}
+.pill:hover { border-color: var(--amber); color: var(--ink); background: rgba(255, 159, 69, 0.08); }
+.pill--ghost { background: transparent; color: var(--muted); }
+
+/* Google sign-in — Google-brand white button: instantly recognizable + high contrast on the dark bar */
+.gsi {
+  display: inline-flex; align-items: center; gap: .55rem;
+  background: #fff; color: #1f1f1f; border: 1px solid #dadce0;
+  font-family: var(--sans); font-weight: 600; font-size: .82rem;
+  padding: .5rem .95rem; border-radius: 999px; cursor: pointer; white-space: nowrap;
+  transition: box-shadow .2s ease, transform .2s ease, background .2s ease;
+}
+.gsi:hover { background: #f7f8fa; box-shadow: 0 6px 18px -6px rgba(0, 0, 0, .55); transform: translateY(-1px); }
+.gsi:active { transform: translateY(0); }
+.gsi__g { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* GitHub / LinkedIn icon buttons */
+.icon-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 999px; color: var(--muted);
+  border: 1px solid var(--line); transition: color .25s ease, border-color .25s ease, background .25s ease;
+}
+.icon-link:hover { color: var(--ink); border-color: var(--amber); background: rgba(255, 159, 69, 0.06); }
+.icon-link svg { width: 16px; height: 16px; }
+
+/* language toggle (EN / 中文 / 拼音) */
+.lang { display: inline-flex; align-items: center; gap: 1px; border: 1px solid var(--line); border-radius: 999px; padding: 2px; background: rgba(255, 255, 255, 0.02); }
+.lang__btn {
+  font-family: var(--mono); font-size: .68rem; color: var(--muted); background: transparent;
+  border: 0; cursor: pointer; padding: .26rem .52rem; border-radius: 999px; line-height: 1;
+  transition: color .2s ease, background .2s ease;
+}
+.lang__btn:hover { color: var(--ink); }
+.lang__btn.on { color: #21120a; background: var(--solar-grad); font-weight: 600; }
+.lang__py.on { background: var(--steel); color: #fff; }
+.lang__busy { color: var(--solar); font-size: .85rem; padding: 0 .25rem; animation: pulse 1.1s ease-in-out infinite; }
+
+@media (max-width: 920px) {
+  .who__email { max-width: 110px; }
+  .pill { padding: .3rem .55rem; }
+}
+@media (max-width: 560px) {
+  .icon-link { display: none; }
+}
+
 .hero.mini { min-height: auto; padding: 5.2rem clamp(1.1rem, 4vw, 3.2rem) 1.5rem; }
 .hero.mini .hero__inner { max-width: var(--maxw); }
 .band__links { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: .9rem; }

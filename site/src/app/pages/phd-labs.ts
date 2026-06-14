@@ -97,6 +97,9 @@ const REGION_ORDER = [
                     <span class="loc">{{ lab.location }}</span>
                   </span>
                   <span class="badges">
+                    @if (liveFor(lab); as live) {
+                      <span class="live-badge" [class.open]="isOpen(live)" title="live application status">{{ live.status }}</span>
+                    }
                     <span class="type-tag" [class.industry]="lab.type==='Industry'" [class.institute]="lab.type==='Institute'">{{ lab.type }}</span>
                     <span class="chev">{{ isExpanded(lab.name) ? '−' : '+' }}</span>
                   </span>
@@ -109,6 +112,9 @@ const REGION_ORDER = [
                     <p><strong>Focus.</strong> {{ lab.focus }}</p>
                     <p><strong>PhD &amp; opportunities.</strong> {{ lab.phd }}</p>
                     <p><strong>Notable groups / people.</strong> {{ lab.notable }}</p>
+                    @if (liveFor(lab); as live) {
+                      <p class="live-line"><strong>Live status.</strong> <span [class.open]="isOpen(live)" class="live-badge">{{ live.status }}</span>@if (live.deadline) {<span> · deadline {{ live.deadline }}</span>}@if (live.visaNotes) {<span> · {{ live.visaNotes }}</span>}@if (live.lastChecked) {<span class="muted"> (checked {{ live.lastChecked }})</span>}</p>
+                    }
                     <p class="muted">{{ lab.notes }}</p>
                     <a [href]="lab.website" target="_blank" rel="noopener" class="go">Official site / admissions →</a>
                   </div>
@@ -206,6 +212,10 @@ const REGION_ORDER = [
     .type-tag { font-size:.6rem; padding:.1rem .35rem; border-radius:4px; background:#243; color:#9fd; white-space:nowrap; }
     .type-tag.industry { background:#342; color:#fd9; }
     .type-tag.institute { background:#234; color:#9cf; }
+    .live-badge { font-size:.6rem; padding:.12rem .42rem; border-radius:4px; background:var(--surface-2); color:var(--amber); border:1px solid var(--line); white-space:nowrap; }
+    .live-badge.open { background:#143524; color:#8be0a0; border-color:#2a5; }
+    .live-line { font-size:.84rem; }
+    .live-line .live-badge { font-size:.7rem; }
     .chev { font-family:var(--mono); font-size:1rem; color:var(--solar); width:1ch; }
     .teaser { padding:0 .9rem .8rem; margin:0; font-size:.84rem; color:var(--muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
     .lab-body { padding:0 .9rem .9rem; font-size:.86rem; color:var(--ink-2); line-height:1.5; }
@@ -544,6 +554,17 @@ export class PhdLabs implements OnInit, OnDestroy {
     const st = (p.status || '').toLowerCase();
     return st.includes('open') || st.includes('rolling');
   }
+
+  // Integrate the live application-status feed into the directory: find a live
+  // record that matches this directory entry (by university code + region).
+  liveFor(lab: AiLab): PhdProgram | undefined {
+    const name = lab.name.toLowerCase();
+    return this.phds().find((p) => {
+      const uni = (p.uni || '').toLowerCase().trim();
+      return uni.length >= 2 && p.country === lab.country && name.includes(uni);
+    });
+  }
+
   setSort(col: 'country' | 'uni' | 'program' | 'status' | 'deadline') {
     if (this.sortColumn() === col) this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
     else { this.sortColumn.set(col); this.sortDirection.set('asc'); }

@@ -20,8 +20,9 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REGION="${AWS_REGION:-us-east-1}"
-FN="${FN_NAME:-erosolar-api}"
-SCHED_FN="${SCHED_FN_NAME:-erosolar-scheduler}"
+# NOTE: must be a UNIQUE name — `erosolar-api` is the vigil-by-trenchwork backend.
+FN="${FN_NAME:-erosolar-org-api}"
+SCHED_FN="${SCHED_FN_NAME:-erosolar-org-scheduler}"
 ROLE_NAME="${FN}-role"
 RUNTIME="nodejs20.x"
 ZIP="/tmp/${FN}.zip"
@@ -50,11 +51,22 @@ if ! aws iam get-role --role-name "$ROLE_NAME" >/dev/null 2>&1; then
 fi
 ROLE_ARN="$(aws iam get-role --role-name "$ROLE_NAME" --query 'Role.Arn' --output text)"
 
-ENV_API="Variables={DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY,TAVILY_API_KEY=$TAVILY_API_KEY,DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-v4-pro},FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID,ALLOW_ORIGIN=$ALLOW_ORIGIN}"
+ENV_API="Variables={DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY,TAVILY_API_KEY=$TAVILY_API_KEY,DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-v4-pro},XAI_API_KEY=${XAI_API_KEY:-},XAI_MODEL=${XAI_MODEL:-grok-4.3},FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID,ALLOW_ORIGIN=$ALLOW_ORIGIN}"
 
 deploy_fn () {  # name handler env
   local name="$1" handler="$2" env="$3"
   if aws lambda get-function --function-name "$name" --region "$REGION" >/dev/null 2>&1; then
+    # SAFETY GUARD (see docs/incident-erosolar-api): never overwrite a function this
+    # project did not create. We adopt a function only if it carries project=erosolar-org.
+    local arn owner
+    arn="$(aws lambda get-function --function-name "$name" --region "$REGION" --query Configuration.FunctionArn --output text)"
+    owner="$(aws lambda list-tags --resource "$arn" --region "$REGION" --query 'Tags.project' --output text 2>/dev/null || echo None)"
+    if [ "$owner" != "erosolar-org" ]; then
+      echo "✗ Refusing to overwrite existing Lambda '$name' (project tag='$owner', not 'erosolar-org')."
+      echo "  That function belongs to another project. Pick a different name, e.g.:"
+      echo "    FN_NAME=erosolar-org-api2 bash lambda/deploy.sh"
+      exit 1
+    fi
     echo "==> Updating $name ..."
     aws lambda update-function-code --function-name "$name" --zip-file "fileb://$ZIP" --region "$REGION" >/dev/null
     aws lambda wait function-updated --function-name "$name" --region "$REGION"
@@ -64,7 +76,8 @@ deploy_fn () {  # name handler env
     echo "==> Creating $name ..."
     aws lambda create-function --function-name "$name" --region "$REGION" \
       --runtime "$RUNTIME" --handler "$handler" --role "$ROLE_ARN" \
-      --timeout 120 --memory-size 512 --zip-file "fileb://$ZIP" --environment "$env" >/dev/null
+      --timeout 120 --memory-size 512 --zip-file "fileb://$ZIP" --environment "$env" \
+      --tags project=erosolar-org >/dev/null
     aws lambda wait function-active --function-name "$name" --region "$REGION"
   fi
 }
@@ -72,7 +85,9 @@ deploy_fn () {  # name handler env
 deploy_fn "$FN" "api.handler" "$ENV_API"
 
 echo "==> Ensuring CORS-enabled Function URL ..."
-CORS_JSON='{"AllowOrigins":["'"$ALLOW_ORIGIN"'","http://localhost:4200"],"AllowMethods":["POST","OPTIONS"],"AllowHeaders":["authorization","content-type"],"MaxAge":3600}'
+# Note: do NOT list OPTIONS in AllowMethods — Function URL CORS handles preflight
+# automatically, and each method value must be <= 6 chars (so "OPTIONS" is rejected).
+CORS_JSON='{"AllowOrigins":["'"$ALLOW_ORIGIN"'","http://localhost:4200"],"AllowMethods":["POST"],"AllowHeaders":["authorization","content-type"],"MaxAge":3600}'
 if ! aws lambda get-function-url-config --function-name "$FN" --region "$REGION" >/dev/null 2>&1; then
   aws lambda create-function-url-config --function-name "$FN" --auth-type NONE --cors "$CORS_JSON" --region "$REGION" >/dev/null
   aws lambda add-permission --function-name "$FN" --statement-id fnurl --action lambda:InvokeFunctionUrl \

@@ -6,7 +6,7 @@
   <a class="brand" routerLink="/" aria-label="erosolar.org — home">
     <span class="brand__mark" aria-hidden="true"></span>
     <span class="brand__name">erosolar.org</span>
-    <span class="brand__dom">AGENTIC BUILDER</span>
+    <span class="brand__dom">Bo&nbsp;Shang</span>
   </a>
 
   <nav class="nav__links">
@@ -16,27 +16,47 @@
   </nav>
 
   <div class="nav__right">
-    <!-- Login status + portal + controls (admin only features gated in UI + backend) -->
+    <div class="lang notranslate" role="group" aria-label="Language">
+      <button class="lang__btn" [class.on]="lang.lang()==='en'" (click)="lang.setLang('en')">EN</button>
+      <button class="lang__btn" [class.on]="lang.lang()==='zh'" (click)="lang.setLang('zh')">中文</button>
+      @if (lang.lang()==='zh') {
+        <button class="lang__btn lang__py" [class.on]="lang.pinyin()" (click)="lang.togglePinyin()" title="Show Pinyin">拼音</button>
+      }
+      @if (lang.busy()) { <span class="lang__busy" aria-hidden="true">…</span> }
+    </div>
+
     @if (auth.isLoggedIn()) {
-      <span class="who" [class.admin]="auth.isAdmin()">
-        {{ auth.user()?.email || 'signed in' }}
-        @if (auth.isAdmin()) { <small>admin</small> }
+      <span class="who" [class.who--admin]="auth.isAdmin()" [title]="auth.user()?.email || ''">
+        <i class="who__dot" aria-hidden="true"></i>
+        <span class="who__email">{{ auth.user()?.email || 'signed in' }}</span>
+        @if (auth.isAdmin()) { <small class="who__badge">admin</small> }
       </span>
 
       @if (auth.isAdmin()) {
-        <button class="nav__cta small" (click)="toggleOutreach()">Toggle outreach</button>
-        <button class="nav__cta small" (click)="toggleAutoApply()">Toggle auto-apply</button>
-        <button class="nav__cta small" (click)="openChat()">Chatbot</button>
-        <a class="nav__cta small" routerLink="/applications">Applications</a>
+        <button class="pill" (click)="openChat()">Chatbot</button>
+        <a class="pill" routerLink="/applications">Applications</a>
+        <button class="pill" (click)="toggleOutreach()">Outreach</button>
+        <button class="pill" (click)="toggleAutoApply()">Auto-apply</button>
       }
-      <button class="nav__cta small" (click)="signOut()">Sign out</button>
+      <button class="pill pill--ghost" (click)="signOut()">Sign out</button>
     } @else {
-      <button class="nav__cta" (click)="signIn()">Sign in with Google (admin)</button>
+      <button class="gsi" (click)="signIn()" aria-label="Sign in with Google">
+        <svg class="gsi__g" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        <span>Sign in with Google</span>
+      </button>
     }
 
-    <a class="nav__cta" routerLink="/jobs">Jobs</a>
-    <a class="nav__cta small" href="https://github.com/aroxora" target="_blank" rel="noopener" aria-label="GitHub">GitHub</a>
-    <a class="nav__cta small" href="https://www.linkedin.com/in/bo-shang-04923b3a6" target="_blank" rel="noopener" aria-label="LinkedIn">LinkedIn</a>
+    <a class="icon-link" href="https://github.com/aroxora" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.05-.72.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.04 1.78 2.73 1.27 3.4.97.1-.75.4-1.27.73-1.56-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>
+    </a>
+    <a class="icon-link" href="https://www.linkedin.com/in/bo-shang-04923b3a6" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+    </a>
   </div>
 </header>
 

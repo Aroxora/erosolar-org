@@ -17,6 +17,7 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from './services/auth.service';
 import { FirestoreService } from './services/firestore.service';
 import { SeoService } from './seo.service';
+import { LangService } from './lang.service';
 import { Chatbot } from './components/chatbot';
 
 @Component({
@@ -34,14 +35,16 @@ export class App implements AfterViewInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private seo = inject(SeoService);
+  lang = inject(LangService);
 
   constructor() {
-    // Per-route SEO: title, meta description/keywords, canonical, OG + Twitter.
+    // Per-route SEO + re-translate the freshly-rendered page (if a language is set).
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
       let r = this.route;
       while (r.firstChild) r = r.firstChild;
       const seo = r.snapshot.data['seo'];
       if (seo) this.seo.update(seo);
+      this.lang.refresh();
     });
   }
 
@@ -59,11 +62,10 @@ export class App implements AfterViewInit, OnDestroy {
   readonly nav = [
     { path: '', label: 'Home' },
     { path: '/work', label: 'Work' },
-    { path: '/blog', label: 'Log' },
-    { path: '/tracker', label: 'Tracker' },
     { path: '/phd-labs', label: 'PhD & Labs' },
     { path: '/jobs', label: 'Jobs' },
-    { path: '/#learning', label: 'Learn' },
+    { path: '/tracker', label: 'Tracker' },
+    { path: '/blog', label: 'Log' },
   ];
 
   private raf = 0;

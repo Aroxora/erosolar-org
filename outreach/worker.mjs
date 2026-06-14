@@ -93,6 +93,60 @@ async function deepseekDraft(prompt) {
   return j.choices?.[0]?.message?.content?.trim() || '';
 }
 
+// ── Tavily research on a target (grounds the draft) ──────────────────────────
+async function tavilyResearch(query) {
+  if (!TAVILY_API_KEY || !query.trim()) return '';
+  try {
+    const r = await fetch('https://api.tavily.com/search', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: TAVILY_API_KEY, query, max_results: 4, search_depth: 'advanced', include_answer: true }),
+    });
+    if (!r.ok) return '';
+    const d = await r.json();
+    const lines = [d.answer ? `Summary: ${d.answer}` : ''];
+    (d.results || []).slice(0, 4).forEach((x) => lines.push(`- ${x.title}: ${(x.content || '').replace(/\s+/g, ' ').slice(0, 200)}`));
+    return lines.filter(Boolean).join('\n');
+  } catch { return ''; }
+}
+
+// ── RAG embeddings: local hashing vector by default; OpenAI if a key is set ──
+function hashEmbed(text, dim = 256) {
+  const v = new Array(dim).fill(0);
+  for (const t of (text || '').toLowerCase().match(/[a-z0-9]{2,}/g) || []) {
+    let h = 2166136261;
+    for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
+    v[(h >>> 0) % dim] += 1;
+  }
+  const norm = Math.sqrt(v.reduce((s, x) => s + x * x, 0)) || 1;
+  return v.map((x) => x / norm);
+}
+function cosine(a, b) { let s = 0; for (let i = 0; i < Math.min(a.length, b.length); i++) s += a[i] * b[i]; return s; }
+async function embed(text) {
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const r = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: JSON.stringify({ model: 'text-embedding-3-small', input: (text || '').slice(0, 8000) }),
+      });
+      if (r.ok) { const j = await r.json(); return { vec: j.data[0].embedding, model: 'openai-text-embedding-3-small' }; }
+    } catch { /* fall back */ }
+  }
+  return { vec: hashEmbed(text), model: 'hash-256' };
+}
+// Retrieve the most relevant prior outreach for grounding/consistency.
+async function ragContext(queryVec, limit = 3) {
+  try {
+    const snap = await db.collection('outreachHistory').orderBy('sentAt', 'desc').limit(80).get();
+    const scored = [];
+    snap.forEach((doc) => { const x = doc.data(); if (Array.isArray(x.vec) && x.vec.length === queryVec.length) scored.push({ score: cosine(queryVec, x.vec), x }); });
+    scored.sort((a, b) => b.score - a.score);
+    const top = scored.slice(0, limit).filter((s) => s.score > 0.15);
+    if (!top.length) return '';
+    return 'RELEVANT PAST OUTREACH (keep consistent; do not repeat verbatim):\n' +
+      top.map((s) => `- to ${s.x.to} re "${s.x.subject}": ${(s.x.bodySent || '').slice(0, 160)}`).join('\n');
+  } catch { return ''; }
+}
+
 function makeTransporter() {
   return nodemailer.createTransport({
     host: SMTP_HOST,
@@ -142,15 +196,19 @@ async function drainQueue() {
   for (const d of snap.docs) {
     const q = { id: d.id, ...d.data() };
     try {
+      // Agentic grounding: Tavily research on the target + RAG over past outreach.
+      const research = await tavilyResearch(`${q.to} ${q.subject} ${q.notes || ''}`.trim());
+      const queryEmb = await embed(`${q.subject} ${q.notes || ''}`);
+      const rag = await ragContext(queryEmb.vec);
+
       let body = q.body || '';
       if (!body || body.length < 40) {
-        // Draft via agent
         const prompt = `Target: ${q.to}
 Subject hint: ${q.subject}
 Notes/context: ${q.notes || 'General AI lab or research outreach for collaboration / opportunities / PhD pipeline / jobs discussion.'}
-Current date: ${new Date().toISOString().slice(0,10)}.
-Write a short professional email (120-220 words) from Bo Shang. Reference specific recent work (e.g. building owned DeepSeek-powered agents Anvilwing/Endearo, agentic newsroom The Meridian, honest LLM pipeline erosolar, DRIFT hard-science screenplay site, Frontier Model Index, Trenchwork momentum tracker) only if relevant. Include one clear next step or question. Link to https://erosolar.org or https://trenchwork.live . End with "— Bo Shang".
-`;
+Current date: ${new Date().toISOString().slice(0, 10)}.
+${research ? `\nLIVE RESEARCH ON THE TARGET (Tavily — use only what's relevant, never fabricate):\n${research}\n` : ''}${rag ? `\n${rag}\n` : ''}
+Write a short professional email (120-220 words) from Bo Shang. Reference specific recent work (owned DeepSeek-powered agents Anvilwing/Endearo, agentic newsroom The Meridian, honest LLM pipeline erosolar, DRIFT hard-science site, Frontier Model Index, Trenchwork) only if relevant. Personalize using the research. Include one clear next step or question. Link to https://erosolar.org or https://trenchwork.live. End with "— Bo Shang".`;
         body = await deepseekDraft(prompt);
       }
 
@@ -160,11 +218,16 @@ Write a short professional email (120-220 words) from Bo Shang. Reference specif
         text: body + `\n\n—\nSent by agentic outreach worker (controlled by Bo). Full history at admin portal. erosolar.org`,
       });
 
-      // Write FULL history (the key requirement)
+      // Write FULL history + RAG embedding (Firestore = history; vec = retrieval).
+      const sentEmb = await embed(`${q.subject}\n${body}`);
       await db.collection('outreachHistory').add({
         to: q.to,
         subject: q.subject,
         bodySent: body,
+        research: research || '',
+        vec: sentEmb.vec,
+        embModel: sentEmb.model,
+        agent: 'deepseek-v4-pro + tavily',
         messageId: info.messageId,
         sentAt: admin.firestore.FieldValue.serverTimestamp(),
         via: `proton-bridge-local-${SMTP_HOST}:${SMTP_PORT}`,

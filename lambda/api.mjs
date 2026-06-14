@@ -14,7 +14,7 @@
 // The browser (authenticated admin) persists results to Firestore directly,
 // under the security rules that allow daburu.dragon@gmail.com to write.
 import admin from 'firebase-admin';
-import { ADMIN_EMAIL, runJobsScan, runPhdTracker, draftJobApplication, chatReply } from './core.mjs';
+import { ADMIN_EMAIL, runJobsScan, runPhdTracker, draftJobApplication, chatReply, translateTexts } from './core.mjs';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'twitch-womens-history';
 if (!admin.apps.length) admin.initializeApp({ projectId: PROJECT_ID });
@@ -37,7 +37,17 @@ export const handler = async (event) => {
   if (method === 'OPTIONS') return { statusCode: 204, headers: CORS, body: '' };
   if (method !== 'POST') return reply(405, { error: 'method not allowed' });
 
-  // ── verify Firebase ID token + admin email ──
+  const path0 = (event?.rawPath || event?.requestContext?.http?.path || event?.path || '/');
+  let body0 = {};
+  try { body0 = JSON.parse(event.isBase64Encoded ? Buffer.from(event.body || '', 'base64').toString('utf8') : (event.body || '{}')); } catch {}
+
+  // ── PUBLIC route: /translate (visitors translate the UI; no admin token) ──
+  if (path0.replace(/\/+$/, '').endsWith('/translate')) {
+    try { return reply(200, { map: await translateTexts(body0.texts, body0.target || 'zh') }); }
+    catch (e) { return reply(500, { error: String(e?.message || e).slice(0, 200) }); }
+  }
+
+  // ── verify Firebase ID token + admin email (everything below is admin-only) ──
   const headers = event.headers || {};
   const authz = headers.authorization || headers.Authorization || '';
   const token = authz.startsWith('Bearer ') ? authz.slice(7) : '';

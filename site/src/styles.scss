@@ -15,9 +15,9 @@
 
   /* ink */
   --ink:       #eef1f4;
-  --ink-2:     #c6ced6;
-  --muted:     #8a939d;
-  --faint:     #59626c;
+  --ink-2:     #cdd4dc;
+  --muted:     #97a0aa;
+  --faint:     #79828d;
 
   /* hazard amber accent (var names kept for continuity) */
   --gold:      #ffc24a;
@@ -182,3 +182,6 @@ app-home, app-work, app-blog, app-tracker, app-jobs, app-applications, app-phd-l
   padding: 0.45rem 0.6rem; border-radius: 8px; font-family: inherit;
 }
 .in:focus { outline: none; border-color: var(--amber); }
+.in::placeholder, input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+/* keep form controls legible regardless of per-page inline backgrounds */
+select.in option { background: var(--surface); color: var(--ink); }

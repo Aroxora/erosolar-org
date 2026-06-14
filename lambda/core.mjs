@@ -11,6 +11,8 @@
 const DEEPSEEK_BASE = 'https://api.deepseek.com';
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-v4-pro';
 const TAVILY_ENDPOINT = 'https://api.tavily.com/search';
+const XAI_BASE = 'https://api.x.ai/v1';
+const XAI_MODEL = process.env.XAI_MODEL || 'grok-4.3';
 
 export const ADMIN_EMAIL = 'daburu.dragon@gmail.com';
 
@@ -134,6 +136,24 @@ ${RESUME_CONTEXT}
 JOB: ${JSON.stringify({ title: job.title, company: job.company, location: job.location, visa: job.visaSponsorship, desc: (job.description || '').slice(0, 600) })}
 EXTRA NOTES: ${extraNotes}`;
   return (await deepseekChat([{ role: 'user', content: sys }], { temperature: 0.35, max_tokens: 1500 })).trim();
+}
+
+// ── Multilingual: translate UI/content strings via xAI Grok (public route) ───
+export async function translateTexts(texts, target = 'zh') {
+  const key = process.env.XAI_API_KEY;
+  if (!key) throw new Error('Missing XAI_API_KEY');
+  const list = (Array.isArray(texts) ? texts : []).filter((t) => typeof t === 'string' && t.trim()).slice(0, 80);
+  if (!list.length) return {};
+  const langName = target === 'zh' ? 'Simplified Chinese' : target;
+  const prompt = `You localize a software engineer's portfolio UI. Translate EACH input string to ${langName}. Return ONLY a JSON object mapping each EXACT input string to {"zh":"<translation>","py":"<Hanyu Pinyin with tone marks>"}. Natural, concise, UI-appropriate; keep proper names sensible (résumé->简历). Inputs: ${JSON.stringify(list)}`;
+  const r = await fetch(`${XAI_BASE}/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    body: JSON.stringify({ model: XAI_MODEL, temperature: 0, response_format: { type: 'json_object' }, messages: [{ role: 'user', content: prompt }] }),
+  });
+  if (!r.ok) throw new Error(`xAI ${r.status}: ${(await r.text()).slice(0, 160)}`);
+  const j = await r.json();
+  return JSON.parse(j.choices?.[0]?.message?.content || '{}');
 }
 
 // ── Admin chatbot reply (context passed in from the client) ──────────────────

@@ -40,10 +40,10 @@ import { AuthService } from '../services/auth.service';
     .msg.u { align-self:flex-end; }
     .b { padding:.45rem .65rem; border-radius:10px; background:#222; white-space:pre-wrap; }
     .msg.u .b { background:#2a2118; }
-    .sys { color:#888; font-style:italic; font-size:.8rem; }
+    .sys { color:var(--muted); font-style:italic; font-size:.8rem; }
     .bar { display:flex; gap:.4rem; padding:.5rem; border-top:1px solid #222; background:#111; }
     .in { flex:1; background:#0a0a0a; color:#ddd; border:1px solid #333; padding:.4rem .5rem; border-radius:8px; }
-    .hint { padding:.3rem .6rem; font-size:.7rem; color:#666; border-top:1px solid #222; }
+    .hint { padding:.3rem .6rem; font-size:.7rem; color:var(--muted); border-top:1px solid #222; }
   `]
 })
 export class Chatbot {
