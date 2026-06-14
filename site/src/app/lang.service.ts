@@ -52,10 +52,10 @@ export class LangService {
 
   private roots(): HTMLElement[] {
     const out: HTMLElement[] = [];
-    const main = this.doc.querySelector('main');
-    const nav = this.doc.querySelector('.nav__links');
-    if (nav) out.push(nav as HTMLElement);
-    if (main) out.push(main);
+    for (const sel of ['.nav__links', '.nav__right', 'main', '.footer']) {
+      const el = this.doc.querySelector(sel);
+      if (el) out.push(el as HTMLElement);
+    }
     return out;
   }
 
@@ -69,6 +69,10 @@ export class LangService {
           let p: HTMLElement | null = (n as Text).parentElement;
           while (p) {
             if (SKIP_TAGS.has(p.tagName) || p.classList?.contains('notranslate')) return NodeFilter.FILTER_REJECT;
+            // Never machine-translate content already authored in Chinese (e.g. /resume-zh,
+            // the 中文 Field Note). Exclude HTML/BODY since the service marks <html lang="zh-CN">.
+            const lng = p.getAttribute?.('lang');
+            if (lng && /^zh/i.test(lng) && p.tagName !== 'HTML' && p.tagName !== 'BODY') return NodeFilter.FILTER_REJECT;
             p = p.parentElement;
           }
           return NodeFilter.FILTER_ACCEPT;
