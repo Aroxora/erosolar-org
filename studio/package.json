@@ -1,0 +1,14 @@
+{
+  "name": "erosolar-video-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Long-form AI video generation by stitching descriptive AI images + TTS narration (DeepSeek script -> xAI images -> say/TTS -> ffmpeg). Writes videos/{id} to Firestore.",
+  "main": "generate.mjs",
+  "scripts": { "generate": "node generate.mjs" },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "firebase-admin": "^12.7.0"
+  }
+}

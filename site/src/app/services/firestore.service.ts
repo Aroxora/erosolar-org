@@ -30,6 +30,18 @@ export interface ApplicationQueueItem {
   id?: string; jobId: string; title: string; company: string; to?: string; subject?: string;
   body?: string; notes?: string; status: string; requestedBy?: string; requestedAt?: any;
 }
+export interface Application {
+  id?: string; kind: 'phd' | 'job'; region: string; institution: string; role?: string;
+  url?: string; contactEmail?: string; deadline?: string; why?: string; confidence?: number;
+  visaType?: string; visaNotes?: string; draftEmail?: string;
+  status?: 'flagged' | 'drafted' | 'queued' | 'applied' | 'interview' | 'offer' | 'rejected';
+  createdAt?: any; updatedAt?: any;
+}
+export interface VideoItem {
+  id?: string; title: string; description?: string; transcript?: string; topic?: string;
+  videoUrl?: string; thumbUrl?: string; durationSec?: number; segments?: number;
+  status?: string; createdAt?: any;
+}
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -154,5 +166,43 @@ export class FirestoreService {
     const job: any = snap.exists() ? { id: snap.id, ...snap.data() } : { id: jobId };
     const ref = await addDoc(collection(db, 'applicationQueue'), { jobId, title: job.title || '', company: job.company || '', to: to || '', notes: notes || (job.visaSponsorship ? 'visa / international track emphasized' : ''), status: 'queued', requestedBy: this.adminEmail(), requestedAt: serverTimestamp() });
     return { id: ref.id, job: { title: job.title, company: job.company } };
+  }
+
+  // ── application agent + tracker (CN/US/HK PhD + jobs, visa-aware) ──────────
+  listenApplications2(cb: (apps: Application[]) => void) {
+    return onSnapshot(query(collection(db, 'applications'), orderBy('createdAt', 'desc'), limit(80)),
+      (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Application[]), () => cb([]));
+  }
+  async findApplications(kind: 'phd' | 'job', region: string) {
+    const { applications = [] } = await this.callLambda('/find-applications', { kind, region });
+    const batch = writeBatch(db);
+    for (const a of applications) {
+      const status = (a.confidence ?? 0) >= 0.8 ? 'drafted' : 'flagged';
+      batch.set(doc(db, 'applications', a.id), { ...a, status, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge: true });
+    }
+    await batch.commit();
+    const hi = applications.filter((x: any) => (x.confidence ?? 0) >= 0.8).length;
+    await addDoc(collection(db, 'updates'), { date: this.today(), type: 'site', title: `Application agent: ${kind} · ${region}`, body: `Found ${applications.length} candidates (${hi} high-confidence, visa-aware). DeepSeek-v4-pro + Tavily.`, agent: 'deepseek-v4-pro + tavily', createdAt: serverTimestamp() });
+    return { written: applications.length, highConfidence: hi };
+  }
+  async setApplicationStatus(id: string, status: string) {
+    await setDoc(doc(db, 'applications', id), { status, updatedAt: serverTimestamp() }, { merge: true });
+  }
+  async queueApplicationOutreach(app: Application) {
+    if (!app.contactEmail) throw new Error('No contact email on this application — add one or research more.');
+    await addDoc(collection(db, 'outreachQueue'), {
+      to: app.contactEmail,
+      subject: `${app.kind === 'phd' ? 'PhD inquiry' : 'Application'} — ${app.institution}${app.role ? ' · ' + app.role : ''}`,
+      body: app.draftEmail || '', notes: `${app.kind}/${app.region} · visa ${app.visaType || '?'}`,
+      status: 'queued', requestedBy: this.adminEmail(), requestedAt: serverTimestamp(),
+    });
+    if (app.id) await this.setApplicationStatus(app.id, 'queued');
+    return { ok: true };
+  }
+
+  // ── video studio ──────────────────────────────────────────────────────────
+  listenVideos(cb: (v: VideoItem[]) => void) {
+    return onSnapshot(query(collection(db, 'videos'), orderBy('createdAt', 'desc'), limit(40)),
+      (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as VideoItem[]), () => cb([]));
   }
 }
