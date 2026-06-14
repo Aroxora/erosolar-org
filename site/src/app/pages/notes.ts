@@ -25,7 +25,54 @@ import { NOTES_META } from './notes.data';
         }
       </nav>
 
-      <!-- ───────────────── Note 5 (latest) — synthesis ───────────────── -->
+      <!-- ───────────────── Note 6 (latest) — AI power rankings ───────────────── -->
+      <article id="ai-power-rankings" class="note">
+        <div class="note-head"><span class="chip">2026-06-14</span><span class="tag">Power rankings · forecast</span></div>
+        <h3>The AI Power Rankings: grading the people building the future — and forecasting who wins next</h3>
+        <p class="dek">Sam Altman, Elon Musk, Dario Amodei, Sundar Pichai, Jensen Huang, and Liang Wenfeng — a mid-2026 scorecard and forecast.</p>
+        <p>The AI boom stopped being a single story. By mid-2026 it's a field of named bets, each tied to one person whose decisions move trillions. I build agentic AI for a living and track these companies as both a paying customer and an analyst — which gives me two vantage points: what they charge me, and what the market charges to own them. Here's my report card on the six who matter most, and where I think each is headed.</p>
+
+        <h4>Sam Altman — OpenAI</h4>
+        <p><strong>Performance.</strong> Still the most famous operator in the field, and on raw capital and reach he's delivered: a record $122B raise in March at an $852B valuation, a revenue run-rate from ~$2B (2023) to ~$25B annualized by early 2026, and ChatGPT as the default AI product for hundreds of millions. He completed the nonprofit→PBC conversion (the OpenAI Foundation keeps board-appointment rights and a ~$130B stake) and in April 2026 renegotiated Microsoft — capping the revenue share and stripping exclusivity to run multi-cloud.</p>
+        <p><strong>Problem.</strong> He's barreling toward one of the largest IPOs in history with potholes that mostly have his name on them: Republican state AGs and the House Oversight Committee are both scrutinizing conflicts of interest between his personal portfolio and OpenAI's decisions — echoes of the 2023 ouster. Worse, OpenAI lost the technical lead: Gemini 3 beat it badly enough to trigger an internal "code red," and it shut down Sora. Still deeply lossmaking.</p>
+        <p><strong>Verdict.</strong> Extraordinary capital and reach, slipping product lead, governance overhang. A strong franchise that is no longer the front-runner.</p>
+
+        <h4>Elon Musk — SpaceX, xAI, Tesla</h4>
+        <p><strong>Performance.</strong> The most audacious financial engineering in corporate history: in February he folded xAI and X into SpaceX to create a single $1.25T entity (the largest merger ever), and on June 12 took it public near $1.77T, raising ~$75B — the largest IPO of all time, making him the first trillionaire. Underneath: a genuine moat — reusable launch ~94% cheaper per kg than China's single-use rockets, Starlink 7,000+ satellites.</p>
+        <p><strong>Problem.</strong> The valuation assumes that lead is permanent and that orbital compute arrives on schedule; independent analysts put fair value nearer $600–900B. ~80% of his fortune rides that one mark, ~95% unrealized. And Tesla is the weak link: ~350× earnings while BYD outsold it in 2025 (2.26M vs 1.64M), out-earned it (~$118B vs ~$92B), trades at a fraction of the multiple, and wins on price in every head-to-head market — shielded at home by 100% EV tariffs.</p>
+        <p><strong>Verdict.</strong> Dazzling capital engineering and a real space moat, married to a stretched valuation, extreme concentration, and a car company losing a cost war it pretends it isn't in.</p>
+
+        <h4>Dario Amodei — Anthropic</h4>
+        <p><strong>Performance.</strong> The quiet winner. A $65B Series H on May 28 at a $965B valuation vaulted Anthropic past OpenAI to most-valuable AI lab, on ~$47B annualized revenue. The Claude franchise (Opus 4.8, Fable 5) is the preferred stack for serious coding and enterprise — the highest-value, stickiest segment. Confidential October IPO filing; guiding to break-even by 2028.</p>
+        <p><strong>Problem.</strong> Still lossmaking and capital-hungry, facing the same commoditization pressure from Chinese models, with consumer presence a fraction of ChatGPT's — growth rides on developers and enterprises, not the mass market.</p>
+        <p><strong>Verdict.</strong> Disciplined, focused, ascendant — the lab that quietly took the lead while everyone watched OpenAI.</p>
+
+        <h4>Sundar Pichai — Google / Alphabet</h4>
+        <p><strong>Performance.</strong> The comeback of the cycle, and on the numbers the single best performance here. Written off 18 months ago, Alphabet is up ~75% on the year, crossed $4T in January, passed Apple for the first time since 2019, and is closing on Nvidia for most valuable company on earth. Q1-2026: $109.9B revenue (+22%), $62.6B net income (+81%), Cloud +48%. Gemini 3 outperformed every rival, crossed 750M monthly users, and — critically — cut AI query cost ~78%. Apple now pays ~$1B/yr to run a custom Gemini inside Siri.</p>
+        <p><strong>Problem.</strong> $175–185B of 2026 capex (a near-doubling) will pressure margins, and only pays off if the infrastructure keeps converting to demand. Search antitrust remains live.</p>
+        <p><strong>Verdict.</strong> The best-positioned full-stack player, full stop — owns the chips (TPUs), models (Gemini), distribution (Search, Android, Chrome, YouTube, now Siri), cloud, and data. As workloads shift training→inference, cost-per-query is the whole game, and owning your silicon is the durable edge. The standout.</p>
+
+        <h4>Jensen Huang — Nvidia</h4>
+        <p><strong>Performance.</strong> The undisputed financial winner of the era: first company to $5T, trading in a $5–5.5T band no public company has touched. A recent quarter: ~$81B revenue (+85%), $58B net income (+211%). He sells the picks and shovels to every lab and hyperscaler here — including the ones building chips to compete with him — with benchmark-backed performance-per-dollar.</p>
+        <p><strong>Problem.</strong> The customers are also the competition: Google's TPUs, Broadcom's custom accelerators (&gt;$8B AI revenue last quarter), Marvell's networking — all chipping at inference. The valuation now requires the entire (circular) AI buildout to keep compounding; any capex pause hits Nvidia first and hardest.</p>
+        <p><strong>Verdict.</strong> The cleanest winner of the cycle — but increasingly a leveraged bet on the AI capex cycle never slowing.</p>
+
+        <h4>Liang Wenfeng — DeepSeek</h4>
+        <p><strong>Performance.</strong> The disruptor, and relative to his resources the most consequential person here. DeepSeek prices V4-Pro at $0.435 per million input tokens — ~22× cheaper than Opus, ~44× cheaper than Fable 5 — at ~90–95% of capability on public benchmarks, running on Huawei Ascend hardware, routing around US export controls entirely.</p>
+        <p><strong>Forecast.</strong> Not a valuation story (privately backed, no trillion-dollar chase) — a margin story, and the asymmetric threat to every Western name above. By making "good enough" intelligence nearly free, he compresses the economics of the whole industry and hands every builder a credible alternative to the frontier labs. Living proof that export controls are accelerating, not preventing, Chinese self-sufficiency.</p>
+        <p><strong>Verdict.</strong> The highest disruption-per-dollar in the field. The man who made intelligence cheap and forced everyone else to explain why theirs costs so much more.</p>
+
+        <h4>The fast follower: Zuckerberg</h4>
+        <p>Meta spends at the same nine-figure-monthly capex pace and pursues an open-weight Llama strategy that, like DeepSeek, pressures the closed labs from below, with enviable distribution. But it monetizes attention, not intelligence directly — so its AI spend is a defensive moat around advertising, not a standalone engine. Watchable, not yet decisive.</p>
+
+        <h4>The ranking</h4>
+        <p>On the combination of delivery and positioning: <strong>1) Pichai</strong> (execution + full-stack); <strong>2) Huang</strong> (financial king, single point of failure = the capex cycle); <strong>3) Amodei</strong> (disciplined new valuation leader); <strong>4) Liang</strong> (the disruptor reshaping everyone's margins); <strong>5) Altman</strong> (powerful but slipping, governance cloud); <strong>6) Musk</strong> — not because SpaceX isn't real, but because the blended bet carries the widest valuation-vs-fundamentals gap, the most concentration risk, and the weakest core asset in Tesla.</p>
+        <p class="take">The through-line: the winners of this phase own infrastructure and distribution (Pichai, Huang) or made intelligence so cheap they reset the board (Liang). The exposed names are those whose valuations have outrun their economics and now depend on a narrative holding or a capex cycle never breaking. The IPO window now opening — Anthropic in October, SpaceX already trading — is where those two groups get sorted in public, on real numbers, for the first time. I'd watch that repricing more closely than any model launch this year.</p>
+        <p class="verify"><strong>Verified vs estimated:</strong> valuations, raises, revenue figures, the SpaceX–xAI merger/IPO marks, Alphabet's Q1 numbers and capex, Nvidia's quarter, the Apple–Google flows, and DeepSeek's pricing are from mid-2026 reporting and company disclosures. The rankings are my analytical judgment; the SpaceX $600–900B fair-value range and net-worth composition are analyst estimates.</p>
+        <p class="src">Sources: each company's mid-2026 earnings / funding announcements and filings; model API pricing pages (DeepSeek, Anthropic, OpenAI, xAI, Zhipu, Moonshot, Alibaba). Cross-referenced with the pricing notes below.</p>
+      </article>
+
+      <!-- ───────────────── Note 5 — synthesis ───────────────── -->
       <article id="cost-collapsing-prices-record" class="note">
         <div class="note-head"><span class="chip">2026-06-14</span><span class="tag">Synthesis · the 2026 story</span></div>
         <h3>The cost of AI is collapsing while the companies making it sit at record highs</h3>
@@ -49,6 +96,61 @@ import { NOTES_META } from './notes.data';
         <p class="take"><strong>My takeaway:</strong> value is migrating from models to compute, distribution, and whoever owns the cheapest supply at scale. Build cheap, reserve the frontier for what truly needs it, and don't mistake a policy moat for a real one.</p>
         <p class="verify"><strong>Verified vs estimated:</strong> API rates, subscription tiers, the $965B / $852B / ~$1.77T valuations, the Apple–Google flows, and the ~$725B (+75% YoY) capex are from June-2026 pricing and reporting. The $600–900B SpaceX fair-value range, the ~80% / ~95% net-worth split, and "~90–95% of capability" are analyst / benchmark estimates — directional, not exact.</p>
         <p class="src">This note synthesizes the four below — see them for the full working and sources.</p>
+      </article>
+
+      <!-- ───────────────── Note (中文) — AI 大分化 ───────────────── -->
+      <article id="ai-da-fenhua-zh" class="note" lang="zh-Hans">
+        <div class="note-head"><span class="chip">2026-06-14</span><span class="tag">中文 · 简体</span></div>
+        <h3>AI 大分化：为什么智能越来越便宜，而卖智能的公司却越来越贵</h3>
+        <p class="dek">一位开发者的 2026 年中 AI 经济与估值实地指南——从 token 价格，到万亿美元级别的 IPO。</p>
+
+        <div class="note-audio">
+          <span class="note-audio__tag">▶ 语音摘要 <small>· AI 配音（婷婷）· 约 1 分钟</small></span>
+          <audio class="note-audio__player" controls preload="none" src="/audio/home-summary-zh.mp3">
+            您的浏览器不支持音频播放——<a href="/audio/home-summary-zh.mp3">下载 MP3</a>。
+          </audio>
+          <a class="note-audio__dl" href="/audio/home-summary-zh.mp3" download>下载</a>
+        </div>
+
+        <p>我靠搭建 AI 智能体（agentic AI）系统为生，所以我会死盯两个数字。第一个，是我运行自己产品时，每个 token 要付多少钱；第二个，是市场为持有那些卖我 token 的公司，每股要付多少钱。到了 2026 年，这两条线分化得如此剧烈，以至于它们之间的差距，本身就成了科技行业最重要的故事。智能正一个月比一个月便宜，而生产智能的公司却从未如此值钱。这两件事同时为真，而把它们调和起来，就是整盘棋的关键。</p>
+
+        <h4>智能的成本正在崩塌</h4>
+        <p>先从价目表说起。在最前沿，Anthropic 的 Fable 5 每百万输入 token 收 10 美元、输出 50 美元；Claude Opus 4.8 是 5/25 美元；OpenAI 的 GPT-5.5 是 5/30 美元；xAI 的 Grok 4.3 是 1.25/2.50 美元。这些是全世界最好的模型，而且都不便宜。</p>
+        <p>再看地板价。DeepSeek（深度求索）的 V4-Pro，每百万输入 token 只要 0.435 美元、输出 0.87 美元；Flash 版本是 0.14/0.28 美元。月之暗面的 Kimi K2.6 约 0.95/4.00 美元；智谱的 GLM-4.7 是 0.60/2.20 美元；阿里巴巴的通义千问 Qwen-Plus 是 0.40/1.20 美元。在真实的混合负载下，DeepSeek V4-Pro 比 Opus 4.8 便宜约 22 倍，比 Fable 5 便宜约 44 倍——而在公开的编程与推理基准上，它的能力大约能达到九成到九成五。最便宜、又够用的算力供给，如今来自中国；当你卖的东西正以这种速度变成大路货时，举证责任就落到了你头上：凭什么你值一个溢价，凭什么你值一万亿美元。</p>
+
+        <h4>订阅制这面镜子</h4>
+        <p>同样的分化也出现在个人订阅上。想要西方实验室最高配的个人套餐，你几乎到哪儿都付一样的钱：Claude Max 20x、ChatGPT Pro、谷歌 AI Ultra 全都是每月 200 美元，SuperGrok Heavy 以 300 美元封顶。四家实验室，一个价格带。</p>
+        <p>然后是中国。智谱的 GLM 编程套餐每月 10、30 或 80 美元，直接按额度接入 Claude Code；月之暗面的 Kimi 会员从 19 到 199 美元，含最多 300 个子智能体的「智能体集群」。对大多数工程师真正关心的那件事——整天跑一个智能编程助手——一个 10 到 30 美元的中国套餐，已经能做到 200 美元西方订阅大部分能做的事。但有一条注意事项比任何价格都重要：订阅没法驱动一个产品。它是给你这副键盘用的；一旦你上线了要服务用户的东西，就进入了按量计费的 API 世界——在那里，中国的差距不再是折扣，而是一个数量级。正确的架构干净地一分为二：固定费用的订阅给开发位，最便宜又够用的 API 给运行时。</p>
+
+        <h4>没人做预算的成本中心</h4>
+        <p>有一课只有当 token 账单变小后才会显现：当你跑在便宜的模型上时，搜索就成了你最大的成本。联网搜索按次收费、不按 token，所以模型降价时它并不跟着降。在一个接入实时联网的 DeepSeek 技术栈上，我亲眼看着搜索这一层膨胀到总账单的约四成。</p>
+        <p>托管搜索 API Tavily，基础查询每次约 0.008 美元、高级约 0.016 美元；自建开源元搜索（如 SearXNG）把边际成本压到接近于零，代价是你得自己搭建并照看。「自建还是购买」的分水岭大约在每月一万到两万次搜索之间。无论哪种，值得优化的杠杆都已经从模型本身，变成了它周围的「管道」。</p>
+
+        <h4>另一条线：估值在创历史新高</h4>
+        <p>翻到资本这一面，数字朝相反方向走。Anthropic 在 5 月 28 日完成 650 亿美元 H 轮，投后估值 9650 亿美元，年化收入约 470 亿美元，首次反超 OpenAI，已秘密递交 IPO、目标 10 月上市。OpenAI 在 3 月以 8520 亿美元估值融资创纪录的 1220 亿美元，月收入约 20 亿美元，却仍巨额亏损。两家合起来值将近 1.8 万亿美元，谁都没能稳定盈利。</p>
+        <p>它们身后是能解释这种紧迫感的资本开支：亚马逊、微软、Alphabet 和 Meta，2026 年合计释放约 7250 亿美元资本开支，同比增长约 75%，几乎全砸在数据中心和芯片上。而下面这部分应该让任何投资者停下来想想：同一批超大规模云厂商与芯片厂商——亚马逊、英伟达、微软、谷歌，加上三星、SK 海力士——正是这些实验室的领投方；实验室随后拿这些钱回头购买算力与存储，由此产生的收入又被记成支撑下一次估值上调的增长。英伟达在 OpenAI 的持股，很大程度上是 GPU 而非现金。这些股权结构，从设计上就是循环的。</p>
+
+        <h4>马斯克奇点</h4>
+        <p>没有人比埃隆·马斯克更能体现这种分化。2 月，SpaceX 把 xAI（它已拥有 X）并入一家单一实体，估值 1.25 万亿美元——史上最大合并。6 月 12 日，这家实体以约 1.77 万亿美元上市，融资约 750 亿美元，是历史上最大的 IPO，让马斯克成了全世界第一个万亿富翁——其中约 80% 的身家押在 SpaceX 这个估值上，约 95% 是尚未变现、流动性很差的股权。</p>
+        <p>被高估了吗？要看你说的是哪一家。SpaceX 的发射业务有真正的护城河：可重复使用让猎鹰 9 号每公斤成本比中国一次性火箭便宜约 94%，星链已有 7000 多颗卫星在轨。但这 1.77 万亿美元已把星链的永久统治、再加上一个尚属投机的「轨道算力」未来都计入价格；独立分析师给出的合理估值更接近 6000 亿到 9000 亿美元。</p>
+        <p>特斯拉是更清楚的例子：市盈率接近 350 倍，而比亚迪——2025 年卖出更多车（226 万辆对 164 万辆）、赚到更多收入（约 1180 亿美元对约 920 亿美元）、市盈率却只有 17 到 23 倍——市值还不到特斯拉的十分之一。在两家正面交锋的每个市场，比亚迪都靠价格取胜。特斯拉的溢价是一个关于机器人和无人出租车的故事，在本土靠 100% 的电动车关税庇护。</p>
+
+        <h4>苹果这个信号</h4>
+        <p>想用一个细节概括真正的杠杆在哪儿，就看苹果。这家地球上最值钱的消费公司，先用十年坚称要自研 AI，然后悄悄签下协议：每年向谷歌支付约 10 亿美元，买一个定制的、1.2 万亿参数的 Gemini 去驱动重建后的 Siri；而与此同时，谷歌仍每年向苹果支付约 200 亿美元，以成为 Safari 的默认搜索引擎。全世界最强大的品牌，选择了租用前沿智能，而不是自己造。</p>
+
+        <h4>轨道这条新战线</h4>
+        <p>SpaceX 的 IPO 卖点其实不是火箭，而是「太空云」。它已向美国 FCC 申请部署多达一百万颗 AI 卫星的星座。每个单元 AI1 搭载约 120 千瓦算力——约等于一个英伟达 GB300 机架——星舰一次可送上 30 到 50 个。乐观的算法令人咋舌：每年约新增 100 吉瓦轨道算力，太阳能供电，不接电网、不占土地。</p>
+        <p>它同样高度投机。亚马逊云业务负责人称轨道数据中心离实用「还差得远」，辐射、散热与发射成本的问题都真实存在，成败系于星舰能否达到工业级发射频率。与此同时，中国正朝同一方向疾奔——国网、千帆、鸿鹄三个巨型星座合计目标约 4 万颗卫星，主要掣肘是还缺一枚成熟的可重复使用火箭。SpaceX 的领先是真实的，它的估值只是假定了这种领先永久存在——而中国正花着几百亿美元要证明并非如此。</p>
+
+        <h4>保护主义这个信号</h4>
+        <p>在这里，AI 经济与地缘政治融为一体。美国对中国电动车征收 100% 关税，外加对所有进口车另征 25%，实际上把比亚迪挡在了美国市场之外；一家贸易媒体把政策目的说得很直白：庇护一个产业，使其免于「它无法匹敌的价格竞争」。这不是对实力的描述，而是一个症状。</p>
+        <p>同样的逻辑贯穿芯片出口管制：它本意是拖慢中国，却也加速了自给自足——DeepSeek 的 V4 系列跑在华为昇腾硬件上，智谱训练 GLM 时根本没用英伟达芯片。把对手从供应链切出去，你就逼它别无选择只能自己造。而且这些墙已在裂开：加拿大把电动车关税降到 6.1%，欧盟在设价格下限后放开市场，比亚迪正在墨西哥建厂并起诉要推翻美国关税。</p>
+
+        <h4>这一切意味着什么</h4>
+        <p>退一步看，这场分化收敛成一个论点：价值正在从模型，转移向算力、分发渠道，以及「谁掌握了规模化之后最便宜又够用的供给」。模型本身正在变成大路货，而这件大路货越来越多地来自中国。在估值游戏里胜出的，是掌握了基础设施层或分发层的公司——但即便这些护城河，也比万亿美元估值所暗示的更窄、更依赖政策。</p>
+        <p class="take">对开发者，打法很清楚，我自己每天都这么做：默认走便宜的技术栈，只为真正需要的少数任务保留前沿模型，掌握住自己的搜索与数据层，永远别把订阅误当成生产基础设施。对投资者，警示同样清楚：当单位经济效益正在崩塌、而最强对手是被关税而非技术挡在门外时，很多所谓的「领先」都比看上去更靠不住。这扇正在打开的 IPO 窗口——Anthropic 在 10 月、SpaceX 已上市——正是这个问题第一次得到真正答案的地方。比起任何一次模型发布，我会更紧盯这场重新定价。</p>
+        <p class="verify"><strong>数据来源（2026 年中，来自公开报道与各公司公开定价）：</strong>各模型 API 价格；Anthropic 650 亿美元 H 轮 / 9650 亿美元估值 / 约 470 亿美元年化收入；OpenAI 1220 亿美元融资 / 8520 亿美元估值；四大厂商约 7250 亿美元资本开支；SpaceX–xAI 合并 1.25 万亿美元、6 月 12 日 IPO 约 1.77 万亿美元；特斯拉对比亚迪销量 / 营收 / 市盈率；苹果向谷歌支付约 10 亿美元、谷歌向苹果约 200 亿美元；SpaceX 太空云 FCC 申请与中国约 4 万颗卫星计划；美国 100% 电动车关税等。估值合理区间与净资产构成为分析师估计。</p>
+        <p class="src">作者：Bo Shang（商波）· <a href="mailto:bo&#64;shang.software">bo&#64;shang.software</a> · <a routerLink="/">erosolar.org</a></p>
       </article>
 
       <!-- ───────────────── Note 4 — Musk empire / valuations ───────────────── -->
@@ -174,6 +276,12 @@ import { NOTES_META } from './notes.data';
     .note-index__title { font-size:.94rem; flex:1; min-width:14rem; }
     .note-index__tag { font-family:var(--mono); font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
     .note { border:1px solid var(--line-soft); border-radius:14px; padding:1.3rem 1.5rem; margin:1.4rem 0; background:var(--surface); scroll-margin-top:90px; }
+    .note-audio { display:flex; align-items:center; gap:.7rem; flex-wrap:wrap; margin:.2rem 0 1rem; padding:.6rem .8rem; border:1px solid var(--line-soft); border-radius:10px; background:rgba(255,255,255,.02); }
+    .note-audio__tag { font-family:var(--mono); font-size:.72rem; color:var(--solar); white-space:nowrap; }
+    .note-audio__tag small { color:var(--muted); }
+    .note-audio__player { height:32px; flex:1; min-width:220px; }
+    .note-audio__dl { font-family:var(--mono); font-size:.72rem; color:var(--muted); text-decoration:none; }
+    .note-audio__dl:hover { color:var(--solar); }
     .note-head { display:flex; gap:.6rem; align-items:center; margin-bottom:.5rem; }
     .chip { font-family:var(--mono); font-size:.72rem; color:var(--solar); border:1px solid var(--line-soft); border-radius:999px; padding:.18rem .55rem; }
     .tag { font-family:var(--mono); font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }

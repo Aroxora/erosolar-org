@@ -11,11 +11,25 @@ export interface NoteMeta {
 
 export const NOTES_META: NoteMeta[] = [
   {
+    slug: 'ai-power-rankings',
+    date: '2026-06-14',
+    tag: 'Power rankings · forecast',
+    title: 'The AI Power Rankings: grading the people building the future — and forecasting who wins next',
+    dek: 'A mid-2026 scorecard + forecast on the six who matter most — Altman, Musk, Amodei, Pichai, Huang, Liang — from someone who pays these labs as a customer and tracks them as an analyst.',
+  },
+  {
     slug: 'cost-collapsing-prices-record',
     date: '2026-06-14',
     tag: 'Synthesis · the 2026 story',
     title: 'The cost of AI is collapsing while the companies making it sit at record highs',
     dek: 'The 2026 story in one gap: inference racing toward zero — cheapest capable supply now Chinese — against all-time-high frontier valuations. How durable is a moat built on owning the frontier?',
+  },
+  {
+    slug: 'ai-da-fenhua-zh',
+    date: '2026-06-14',
+    tag: '中文 · 简体',
+    title: 'AI 大分化：为什么智能越来越便宜，而卖智能的公司却越来越贵',
+    dek: '一位开发者的 2026 年中 AI 经济与估值实地指南——从 token 价格，到万亿美元级别的 IPO。（简体中文，含语音朗读）',
   },
   {
     slug: 'musk-empire-overvalued',
