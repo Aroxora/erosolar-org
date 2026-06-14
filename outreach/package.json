@@ -11,7 +11,7 @@
     "install-service": "bash install.sh || echo 'see README for launchd/ cron setup'"
   },
   "dependencies": {
-    "dotenv": "^16.4.5",
+    "dotenv": "^17.4.2",
     "firebase-admin": "^12.7.0",
     "imapflow": "^1.0.16",
     "mailparser": "^3.7.1",
