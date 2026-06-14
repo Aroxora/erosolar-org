@@ -211,16 +211,29 @@ function isLocalHost(h) { return h === '127.0.0.1' || h === 'localhost' || h ===
 const MAIL_ACCOUNTS = [
   { name: 'proton', host: IMAP_HOST, port: IMAP_PORT, user: IMAP_USER, pass: IMAP_PASS, secure: IMAP_TLS === 'SSL' },
 ];
-if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+// Gmail accounts: GMAIL_ACCOUNTS (JSON array of {user,pass[,name]}) supports MANY
+// inboxes; falls back to the single GMAIL_USER/GMAIL_APP_PASSWORD pair if not set.
+const GMAIL_IMAP_HOST = process.env.GMAIL_IMAP_HOST || 'imap.gmail.com';
+const GMAIL_IMAP_PORT = Number(process.env.GMAIL_IMAP_PORT || 993);
+function gmailAccountsFromEnv() {
+  if (process.env.GMAIL_ACCOUNTS) {
+    try {
+      return JSON.parse(process.env.GMAIL_ACCOUNTS).filter((a) => a && a.user && a.pass);
+    } catch (e) { console.warn('[mail] GMAIL_ACCOUNTS is not valid JSON:', e.message); return []; }
+  }
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    return [{ user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD }];
+  }
+  return [];
+}
+gmailAccountsFromEnv().forEach((a, i) => {
   MAIL_ACCOUNTS.push({
-    name: 'gmail',
-    host: process.env.GMAIL_IMAP_HOST || 'imap.gmail.com',
-    port: Number(process.env.GMAIL_IMAP_PORT || 993),
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, ''), // app passwords are shown space-separated
+    name: a.name || ((a.user.split('@')[0] || `gmail${i + 1}`).replace(/[^a-z0-9]/gi, '').slice(0, 24)),
+    host: GMAIL_IMAP_HOST, port: GMAIL_IMAP_PORT,
+    user: a.user, pass: String(a.pass).replace(/\s+/g, ''), // app passwords are shown space-separated
     secure: true,
   });
-}
+});
 
 function looksLikeBounce(p) {
   const from = (p.from?.text || '').toLowerCase();
