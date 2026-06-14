@@ -23,7 +23,7 @@
     "openai": "^4.52.0"
   },
   "devDependencies": {
-    "@types/node": "^22.5.0",
+    "@types/node": "^25.9.3",
     "typescript": "^5.5.4"
   },
   "overrides": {
