@@ -19,6 +19,19 @@
   </div>
 </div>
 
+<section id="about" class="section section-alt">
+  <div class="section-head">
+    <p class="kicker">/ about</p>
+    <h2 class="title">AI engineer &amp; founder — agentic systems, end to end</h2>
+  </div>
+  <div class="about-prose">
+    <p class="lead-about">I'm an AI engineer and founder who builds agentic systems end to end — and I've shipped most of it solo.</p>
+    <p><strong>What I build:</strong> long-horizon AI agents that work in production. I created <strong>Erosolar</strong>, an autonomous AI research assistant with its own coding CLI; <strong>Erosolar Coder</strong>, a terminal agent at Claude Code parity; and <strong>Vigil</strong>, an AI-powered defensive-cyber agent under my company, <strong>Trenchwork</strong> — plus <strong>Women Who Defend</strong>, a hands-on security-engineering learning platform.</p>
+    <p>My edge is depth across the whole AI stack: agent architecture and tool-use, multi-model orchestration, prompt caching and context engineering, retrieval and search pipelines (managed and self-hosted), and the cost economics most teams get wrong. I route across Claude, GPT, Grok, and the Chinese frontier — DeepSeek, Qwen, Kimi, GLM — by capability and price, and I write publicly (see <a routerLink="/notes">Field notes</a>) about where AI cost, value, and competition are actually heading.</p>
+    <p>I come from security engineering (Tufts), with deep fluency in applied AI, cybersecurity, and Chinese technology. I think from first principles and learn fastest by building the hard thing myself.</p>
+  </div>
+</section>
+
 <section id="resume" class="section">
   <div class="section-head">
     <p class="kicker">/ résumé &amp; accomplishments</p>
@@ -98,6 +111,33 @@
 
   <div class="learning-cta">
     <p class="small">See the concrete systems and their agentic underpinnings on the <a routerLink="/work">Work</a> page. The same DeepSeek + Tavily + local worker patterns that power the trackers and applications here are the tools I use to learn and build at speed.</p>
+  </div>
+</section>
+
+<!-- Field notes teaser (latest 3, shared source with /notes) -->
+<section id="field-notes" class="section">
+  <div class="section-head">
+    <p class="kicker">/ field notes</p>
+    <h2 class="title">Current thinking — AI economics &amp; infrastructure</h2>
+    <p class="sub">Short, sourced analyses on the economics of frontier AI — the same reasoning I use to architect Erosolar. Verified figures marked vs estimates.</p>
+  </div>
+
+  <div class="notes-grid">
+    @for (n of notes; track n.slug) {
+      <a class="note-teaser" [routerLink]="'/notes'" [fragment]="n.slug" data-reveal>
+        <div class="note-teaser__meta">
+          <span class="note-teaser__date">{{ n.date }}</span>
+          <span class="note-teaser__tag">{{ n.tag }}</span>
+        </div>
+        <h3>{{ n.title }}</h3>
+        <p>{{ n.dek }}</p>
+        <span class="note-teaser__more">Read note →</span>
+      </a>
+    }
+  </div>
+
+  <div class="learning-cta">
+    <a class="btn btn-ghost" routerLink="/notes">Read all field notes</a>
   </div>
 </section>
 

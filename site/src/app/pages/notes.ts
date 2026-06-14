@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { NOTES_META } from './notes.data';
 
 @Component({
   selector: 'app-notes',
@@ -14,8 +15,66 @@ import { RouterModule } from '@angular/router';
         <p class="sub">Short, sourced analyses on the economics and infrastructure of frontier AI — the same reasoning I use to architect Erosolar. Figures are June 2026; I mark <strong>verified</strong> vs <strong>estimated</strong> in every piece, because prices and rounds move weekly.</p>
       </div>
 
-      <!-- ───────────────── Note 3 (latest) — compute / capital ───────────────── -->
-      <article class="note">
+      <nav class="note-index" aria-label="Field notes index">
+        @for (n of notes; track n.slug) {
+          <a class="note-index__item" href="#{{ n.slug }}">
+            <span class="note-index__date">{{ n.date }}</span>
+            <span class="note-index__title">{{ n.title }}</span>
+            <span class="note-index__tag">{{ n.tag }}</span>
+          </a>
+        }
+      </nav>
+
+      <!-- ───────────────── Note 5 (latest) — synthesis ───────────────── -->
+      <article id="cost-collapsing-prices-record" class="note">
+        <div class="note-head"><span class="chip">2026-06-14</span><span class="tag">Synthesis · the 2026 story</span></div>
+        <h3>The cost of AI is collapsing while the companies making it sit at record highs</h3>
+        <p class="dek">The cost of AI is collapsing. The price of the companies that make it is at record highs. That gap is the 2026 story.</p>
+
+        <h4>The floor — API, per 1M tokens</h4>
+        <p><strong>Frontier:</strong> Fable 5 $10/$50 · Opus 4.8 $5/$25 · GPT-5.5 $5/$30 · Grok 4.3 $1.25/$2.50. <strong>Value:</strong> DeepSeek V4-Pro $0.435/$0.87 · V4-Flash $0.14/$0.28 · Kimi K2.6 $0.95/$4 · GLM-4.7 $0.60/$2.20. DeepSeek runs ~22× cheaper than Opus and ~44× cheaper than Fable 5 — at ~90–95% of the capability on coding benchmarks. The cheapest capable supply is now Chinese.</p>
+
+        <h4>The seat — heaviest monthly plan</h4>
+        <p><strong>West:</strong> Claude Max 20×, ChatGPT Pro, Gemini Ultra — all $200; SuperGrok Heavy $300. <strong>China:</strong> GLM Coding Plan $10–$80 (Claude-Code compatible); Kimi $19–$199. A $10–30 Chinese plan covers most of what a $200 Western plan does.</p>
+
+        <h4>The ceiling — valuations</h4>
+        <p>Anthropic $965B · OpenAI $852B · SpaceX (+xAI+X) IPO'd at ~$1.77T — analysts peg fair value at $600–900B. Musk became the first trillionaire, ~80% of it on the SpaceX mark, ~95% unrealized. Tesla trades near 350× earnings while BYD sells more cars at ~1/10th the market cap. Apple now pays Google ~$1B/yr for the Gemini that runs Siri — while Google pays Apple ~$20B/yr for search.</p>
+
+        <h4>The plumbing</h4>
+        <p>Amazon, Microsoft, Alphabet and Meta are spending ~$725B on 2026 capex, +75% YoY. The same hyperscalers and chipmakers fund the labs that buy their compute. Circular by design.</p>
+
+        <h4>The tension</h4>
+        <p>If inference is commoditizing toward zero — and the cheapest capable supply is Chinese — how durable are trillion-dollar valuations built on owning the frontier? Protectionism (100%+ EV tariffs, chip controls) is propping up the gap, and it's already cracking.</p>
+
+        <p class="take"><strong>My takeaway:</strong> value is migrating from models to compute, distribution, and whoever owns the cheapest supply at scale. Build cheap, reserve the frontier for what truly needs it, and don't mistake a policy moat for a real one.</p>
+        <p class="verify"><strong>Verified vs estimated:</strong> API rates, subscription tiers, the $965B / $852B / ~$1.77T valuations, the Apple–Google flows, and the ~$725B (+75% YoY) capex are from June-2026 pricing and reporting. The $600–900B SpaceX fair-value range, the ~80% / ~95% net-worth split, and "~90–95% of capability" are analyst / benchmark estimates — directional, not exact.</p>
+        <p class="src">This note synthesizes the four below — see them for the full working and sources.</p>
+      </article>
+
+      <!-- ───────────────── Note 4 — Musk empire / valuations ───────────────── -->
+      <article id="musk-empire-overvalued" class="note">
+        <div class="note-head"><span class="chip">2026-06-13</span><span class="tag">Valuation · geopolitics</span></div>
+        <h3>Is Musk's $1T+ empire overvalued — and are US import controls hiding it?</h3>
+        <p class="dek">A genuine evaluation: the bear case on Tesla is strong, but SpaceX stays nuanced — its launch moat is real. Lumping them together would be the weaker argument. The common thread is that tariffs and export controls may be masking how contingent the US lead is.</p>
+
+        <h4>Tesla — the clear case</h4>
+        <p>Tesla trades around <strong>350× earnings</strong> at a market cap over $1 trillion. Yet <strong>BYD sold more cars in 2025</strong> (2.26M vs Tesla's 1.64M), earns more revenue (~$118B vs ~$92B), and trades at <strong>~17× forward earnings</strong> (low-20s trailing) — about one-tenth Tesla's market cap. In every market where they meet head-to-head — Europe, the UK, Australia — BYD wins on price and matches on tech. The only reason Tesla doesn't face that fight at home is a <strong>100%+ tariff wall</strong> on Chinese EVs (plus a separate 25% on all imported cars), a wall built to shield an industry "from price competition it cannot match." That isn't strength — it's a moat made of policy.</p>
+
+        <h4>SpaceX — the nuanced case</h4>
+        <p>Here the moat is real. Reusability makes SpaceX launches <strong>~94% cheaper</strong> than China's single-use Long March (~$2,700/kg vs ~$21,000/kg), and Starlink has <strong>7,000+ satellites</strong> up versus China's few hundred. China is not beating SpaceX on rockets today. But the <strong>$1.77T IPO valuation</strong> prices in permanent Starlink dominance plus a speculative orbital-AI-data-center story — and China is spending tens of billions to erode exactly that: three megaconstellations targeting ~40,000 satellites, new reusable rockets, and a dedicated STAR Market IPO channel. Independent analysts peg fair value nearer <strong>$600–900B</strong> than $1.77T.</p>
+
+        <h4>The net worth</h4>
+        <p>Musk is now the world's first trillionaire — but <strong>~80% of it rides on SpaceX's $135/share IPO mark</strong>, ~25% on Tesla at 350× earnings, and ~95% is unrealized, illiquid equity. The fortune sits on the two most stretched valuations in the market.</p>
+
+        <h4>The tell</h4>
+        <p>EV tariffs and chip export controls get sold as strength. Read them instead as symptoms: the US is shielding its champions from a Chinese cost curve and manufacturing base it can't currently match. That buys time; it doesn't close the gap. And the walls are already cracking — Canada cut its EV tariff to 6.1%, the EU opened up, and BYD is building in Mexico while suing to kill the US tariffs.</p>
+
+        <p class="take"><strong>My read:</strong> Tesla looks genuinely overvalued against competition that policy keeps offshore. SpaceX has a real moat — at a valuation that assumes it lasts forever. Strip out the protection, and a lot of "US leadership" in EVs, chips, and space is more contingent than the trillion-dollar marks imply.</p>
+        <p class="verify"><strong>Verified vs estimated:</strong> Tesla's ~352× P/E, BYD's ~$118B sales / 2.26M-vs-1.64M units / ~17× forward P/E, the 100% + 25% US tariffs, the ~94% launch-cost gap, Starlink's 7,000 satellites, the $1.77T IPO mark, and the Canada/EU/Mexico tariff moves are from June-2026 reporting and filings. The $600–900B fair-value range and the ~80%/~95% net-worth composition are analyst estimates — directional, not exact.</p>
+      </article>
+
+      <!-- ───────────────── Note 3 — compute / capital ───────────────── -->
+      <article id="compute-is-the-asset" class="note">
         <div class="note-head"><span class="chip">2026-06-12</span><span class="tag">Capital · compute</span></div>
         <h3>Compute is the asset: 2026's AI story is vertical integration and circular capital</h3>
         <p class="dek">Strip away the model launches and 2026's AI story gets simpler — a few vertically integrated giants are buying the entire stack: capital, compute, and now orbit.</p>
@@ -39,7 +98,7 @@ import { RouterModule } from '@angular/router';
       </article>
 
       <!-- ───────────────── Note 2 — the $200 club vs China ───────────────── -->
-      <article class="note">
+      <article id="wests-ai-subscriptions-vs-china" class="note">
         <div class="note-head"><span class="chip">2026-06-10</span><span class="tag">Pricing · build the product</span></div>
         <h3>The West's heaviest AI subscriptions all cost about the same. China's cost a tenth — or less.</h3>
         <p class="dek">I priced every flagship "max tier" as of June 2026. The clustering is almost funny.</p>
@@ -81,7 +140,7 @@ import { RouterModule } from '@angular/router';
       </article>
 
       <!-- ───────────────── Note 1 — build vs buy: search ───────────────── -->
-      <article class="note">
+      <article id="build-vs-buy-web-search" class="note">
         <div class="note-head"><span class="chip">2026-06-08</span><span class="tag">Build vs buy · search</span></div>
         <h3>Build vs buy, but for web search</h3>
         <p class="dek">On a cheap-LLM stack, search is often a bigger line item than the model itself. Here's the honest trade-off between managed search (Tavily) and a self-hosted SearXNG stack for an agentic research assistant.</p>
@@ -107,7 +166,14 @@ import { RouterModule } from '@angular/router';
     </div>
   `,
   styles: [`
-    .note { border:1px solid var(--line-soft); border-radius:14px; padding:1.3rem 1.5rem; margin:1.4rem 0; background:var(--surface); }
+    .note-index { display:grid; gap:.1rem; margin:1rem 0 .4rem; padding:.5rem 1rem; border:1px solid var(--line-soft); border-radius:12px; background:var(--surface); }
+    .note-index__item { display:flex; gap:.8rem; align-items:baseline; flex-wrap:wrap; color:var(--ink-2); text-decoration:none; padding:.5rem 0; border-bottom:1px solid var(--line-soft); }
+    .note-index__item:last-child { border-bottom:0; }
+    .note-index__item:hover .note-index__title { color:var(--solar); }
+    .note-index__date { font-family:var(--mono); font-size:.72rem; color:var(--muted); white-space:nowrap; }
+    .note-index__title { font-size:.94rem; flex:1; min-width:14rem; }
+    .note-index__tag { font-family:var(--mono); font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+    .note { border:1px solid var(--line-soft); border-radius:14px; padding:1.3rem 1.5rem; margin:1.4rem 0; background:var(--surface); scroll-margin-top:90px; }
     .note-head { display:flex; gap:.6rem; align-items:center; margin-bottom:.5rem; }
     .chip { font-family:var(--mono); font-size:.72rem; color:var(--solar); border:1px solid var(--line-soft); border-radius:999px; padding:.18rem .55rem; }
     .tag { font-family:var(--mono); font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
@@ -128,4 +194,6 @@ import { RouterModule } from '@angular/router';
     .byline { font-size:.82rem; color:var(--muted); margin-top:1.6rem; } .byline a { color:var(--solar); }
   `],
 })
-export class Notes {}
+export class Notes {
+  readonly notes = NOTES_META;
+}

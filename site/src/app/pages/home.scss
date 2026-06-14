@@ -64,6 +64,41 @@
 }
 .learning-cta { margin-top: 1.4rem; }
 
+// About / profile prose
+.about-prose {
+  max-width: 80ch;
+  p { color: var(--ink-2); line-height: 1.65; margin: 0 0 .85rem; }
+  .lead-about { font-size: 1.14rem; color: var(--ink); }
+  a { color: var(--solar); }
+}
+
+// Field notes teaser cards
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.note-teaser {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 1.3rem 1.4rem;
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .18s ease, transform .18s ease;
+  &:hover { border-color: var(--solar); transform: translateY(-2px); }
+  &:hover .note-teaser__more { color: var(--solar); }
+  .note-teaser__meta { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
+  .note-teaser__date { font-family: var(--mono); font-size: .72rem; color: var(--solar); }
+  .note-teaser__tag { font-family: var(--mono); font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  h3 { font-family: var(--display); margin: 0; font-size: 1.18rem; line-height: 1.25; }
+  p { color: var(--ink-2); line-height: 1.5; margin: 0; font-size: .92rem; flex: 1; }
+  .note-teaser__more { font-family: var(--mono); font-size: .76rem; color: var(--muted); margin-top: .2rem; }
+}
+
 .profiles-note {
   margin-top: .6rem;
   font-size: .82rem;

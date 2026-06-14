@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService, ADMIN_EMAIL } from '../services/auth.service';
+import { NOTES_META } from './notes.data';
 
 interface ResumeItem {
   period: string;
@@ -28,6 +29,9 @@ export class Home {
 
   readonly year = new Date().getFullYear();
   readonly isAdmin = this.auth.isAdmin;
+
+  // Latest Field Notes (shared source of truth with the /notes page)
+  readonly notes = NOTES_META.slice(0, 3);
 
   // Extracted + highlighted from deep recon of the real repos (described by purpose)
   readonly resume: ResumeItem[] = [
