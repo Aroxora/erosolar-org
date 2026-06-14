@@ -13,6 +13,7 @@ import { StudioHow } from './pages/studio-how';
 import { AiCosts } from './pages/ai-costs';
 import { Notes } from './pages/notes';
 import { ResumeZh } from './pages/resume-zh';
+import { ResumeEn } from './pages/resume-en';
 
 export const routes: Routes = [
   {
@@ -85,6 +86,15 @@ export const routes: Routes = [
       title: 'AI Cost Optimization — subscriptions vs API runtime, tiered routing | Bo Shang',
       description: 'A detailed June-2026 breakdown: Claude Max / ChatGPT Pro / Gemini Ultra / Grok Heavy dev-seat subscriptions vs metered API (Opus 4.8, Fable 5, DeepSeek V4-Pro) + Tavily search — and why tiered routing wins. LLMOps cost analysis by Bo Shang.',
       keywords: 'AI cost optimization, LLMOps, DeepSeek pricing, Claude Max, Opus 4.8, Fable 5, Tavily, tiered routing, AI engineering cost, token economics',
+    } },
+  },
+  {
+    path: 'resume', component: ResumeEn, title: 'Bo Shang — Résumé (AI engineer / founder) | LLMOps · agents · security',
+    data: { seo: {
+      path: 'resume',
+      title: 'Bo Shang — Résumé | AI engineer / founder · LLMOps · agents · security',
+      description: 'Bo Shang\'s résumé: AI engineer and founder (Trenchwork) building long-horizon agentic systems. Core skills: agent architecture, multi-model orchestration, LLMOps cost optimization, retrieval pipelines, security engineering. Projects: Erosolar, Erosolar Coder, Vigil, Women Who Defend, Frontier Model Index, The Meridian, DRIFT. Open to roles internationally with visa support.',
+      keywords: 'Bo Shang resume, AI engineer, LLMOps, agentic AI, DeepSeek, multi-model routing, cybersecurity, Trenchwork, Erosolar, research engineer',
     } },
   },
   {

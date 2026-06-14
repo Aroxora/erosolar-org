@@ -71,12 +71,13 @@ export class App implements AfterViewInit, OnDestroy {
   // Simple top-level nav for router
   readonly nav = [
     { path: '', label: 'Home' },
+    { path: '/resume', label: 'Résumé' },
+    { path: '/resume-zh', label: '简历' },
     { path: '/work', label: 'Work' },
     { path: '/phd-labs', label: 'PhD & Labs' },
     { path: '/jobs', label: 'Jobs' },
     { path: '/ai-costs', label: 'AI Costs' },
     { path: '/notes', label: 'Notes' },
-    { path: '/resume-zh', label: '简历' },
     { path: '/tracker', label: 'Tracker' },
     { path: '/commits', label: 'Commits' },
     { path: '/studio', label: 'Studio' },

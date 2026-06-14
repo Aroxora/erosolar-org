@@ -13,7 +13,7 @@ interface Proj { org: string; role: string; period: string; impact: string; tech
       <div class="section-head">
         <p class="kicker">/ 中文简历 · résumé</p>
         <h2 class="title">商波（Bo Shang）— AI 工程师 / 创始人</h2>
-        <p class="sub">独立、端到端地构建可拥有、可验证的长周期 AI 智能体系统与底层基础设施。<a routerLink="/">English résumé →</a></p>
+        <p class="sub">独立、端到端地构建可拥有、可验证的长周期 AI 智能体系统与底层基础设施。<a routerLink="/resume">English résumé →</a></p>
       </div>
 
       <h3>个人简介</h3>
