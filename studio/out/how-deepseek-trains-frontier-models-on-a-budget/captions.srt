@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:27,000
+I'm Bo Shang, and if you follow AI, you know training a model like GPT-4 costs hundreds of millions. Massive GPU clusters, months of compute, and energy bills that could power small cities. It's a barrier that locks out all but the richest labs. But DeepSeek, a Chinese startup, proved you can achieve frontier performance on a budget. How? By rethinking almost every part of the process.
+
+2
+00:00:27,000 --> 00:00:48,000
+Their approach centers on a Mixture-of-Experts architecture. Instead of firing up the entire model for every task, they activate only the specialists needed. Imagine a vast library where only the relevant books light up—massive model capacity, but only a fraction of the compute. This alone slashes costs dramatically.
+
+3
+00:00:48,000 --> 00:01:07,000
+But they didn't stop there. DeepSeek introduced multi-token prediction during training—guessing not just the next word, but several steps ahead. It's like learning chess by planning multiple moves in advance. This denser learning signal supercharges data efficiency, squeezing more understanding from each token.
+
+4
+00:01:07,000 --> 00:01:26,000
+They also embraced FP8 precision—a compact number format that packs more punch per byte. This reduces memory and speeds up calculations, allowing them to use fewer GPUs without sacrificing quality. Think of it as compressing heavy video into a streamable format, but for neural networks.
+
+5
+00:01:26,000 --> 00:01:47,000
+Data efficiency is another lever. Instead of indiscriminately scraping the web, DeepSeek meticulously curates high-quality data. They filter for reasoning, diversity, and correctness, using model-based quality scoring. It's like training an Olympic athlete on a perfect diet—every calorie counts, no junk.
+
+6
+00:01:47,000 --> 00:02:12,000
+And they didn't rely on exotic infrastructure. DeepSeek engineered custom CUDA kernels and optimized pipeline parallelism to squeeze maximum utilization from standard GPUs. No exclusive, million-dollar clusters—just smart software. The culmination was DeepSeek V3, trained for under six million dollars, matching models that cost ten to twenty times more.
+
+7
+00:02:12,000 --> 00:02:31,000
+This isn't just a cost-saving stunt. It shows that AI innovation can come from anywhere, not just the tech giants with deep pockets. DeepSeek's approach could democratize frontier AI, sparking a new wave of efficient, open models that push the field forward without breaking the bank.

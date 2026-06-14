@@ -39,6 +39,13 @@ export class Home {
       tech: ['DeepSeek', 'Tavily', 'Node/TS', 'Go', 'Firebase', 'Angular'],
     },
     {
+      period: '2026',
+      role: 'AI cost engineering / LLMOps',
+      org: 'Erosolar — tiered model routing',
+      impact: 'Costed and architected the entire stack around the dev-seat-vs-runtime distinction: a $200 Claude Max subscription is ~$3,850/mo of Opus value for *building*, but product runtime must be metered API. Built tiered routing — DeepSeek-v4-pro + Tavily as the default runtime (~22× cheaper than Opus; ~$297/mo vs ~$3,970/mo with search attached), selective escalation to Opus/Fable for the hardest long-horizon tasks, token caps, and aggressive caching — plus search-layer optimization once cheap tokens make search ~40% of the bill. Full write-up on the AI Costs page.',
+      tech: ['LLMOps', 'DeepSeek', 'Opus 4.8', 'Tavily', 'tiered routing', 'cost modeling'],
+    },
+    {
       period: '2025–2026',
       role: 'Creator & operator',
       org: 'Endearo (personal AI life-assistant)',

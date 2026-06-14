@@ -28,7 +28,8 @@ Shipped work (2024–2026), described by purpose:
 - DRIFT: hard-science screenplay site with a weekly DeepSeek+Tavily "living science" curator, a long-horizon video pipeline (director → image-to-video chaining → ffmpeg stitch, resumable/self-healing), a grounded companion, and an agentic story foundry.
 - Trenchwork: Go desktop activity-tracking daemon + iOS/Watch Live Activities + Tailscale approvals for long agent runs; 24/7 nudge scheduler.
 - Endearo: 24/7 proactive AI life-assistant (local daemons + Proton Bridge, memory/todos), reads my own inboxes read-only and surfaces the next concrete step.
-All owner-controlled, DeepSeek + Tavily heavy, no vendor lock-in. Open to AI engineering, research engineering, red-team / AI safety, and infrastructure roles — including international, and willing to handle any required visa / sponsorship / relocation process.
+- AI cost engineering / LLMOps: architects around the dev-seat-vs-runtime distinction and tiered model routing — DeepSeek-v4-pro + Tavily as the default runtime (~22x cheaper than Opus 4.8; ~$297/mo vs ~$3,970/mo with search), selective escalation to Opus/Fable for the hardest tasks, token caps + aggressive caching, and search-layer optimization (cheap tokens make search ~40% of the bill).
+All owner-controlled, DeepSeek + Tavily heavy, no vendor lock-in. Open to AI engineering, LLMOps, research engineering, red-team / AI safety, and infrastructure roles — including international, and willing to handle any required visa / sponsorship / relocation process.
 Contact: bo@trenchwork.org / bo@shang.software / 508-260-0326. Sites: erosolar.org, trenchwork.live.
 `.trim();
 

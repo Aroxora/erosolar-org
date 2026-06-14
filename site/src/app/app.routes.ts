@@ -10,6 +10,7 @@ import { Commits } from './pages/commits';
 import { Apply } from './pages/apply';
 import { Studio } from './pages/studio';
 import { StudioHow } from './pages/studio-how';
+import { AiCosts } from './pages/ai-costs';
 
 export const routes: Routes = [
   {
@@ -73,6 +74,15 @@ export const routes: Routes = [
       title: 'GitHub commit tracker — build momentum | Bo Shang',
       description: "A live feed of Bo Shang's recent GitHub commits with build-momentum stats; a local agent emails a deepseek-v4-flash nudge whenever the commit pace drops below the recent average.",
       keywords: 'Bo Shang GitHub, commit tracker, build momentum, coding activity, agentic productivity',
+    } },
+  },
+  {
+    path: 'ai-costs', component: AiCosts, title: 'AI cost optimization — dev seat vs runtime | Bo Shang',
+    data: { seo: {
+      path: 'ai-costs',
+      title: 'AI Cost Optimization — subscriptions vs API runtime, tiered routing | Bo Shang',
+      description: 'A detailed June-2026 breakdown: Claude Max / ChatGPT Pro / Gemini Ultra / Grok Heavy dev-seat subscriptions vs metered API (Opus 4.8, Fable 5, DeepSeek V4-Pro) + Tavily search — and why tiered routing wins. LLMOps cost analysis by Bo Shang.',
+      keywords: 'AI cost optimization, LLMOps, DeepSeek pricing, Claude Max, Opus 4.8, Fable 5, Tavily, tiered routing, AI engineering cost, token economics',
     } },
   },
   {

@@ -1,0 +1,7 @@
+file '/Users/bo/GitHub/erosolar-org/studio/out/how-deepseek-trains-frontier-models-on-a-budget/s0.mp4'
+file '/Users/bo/GitHub/erosolar-org/studio/out/how-deepseek-trains-frontier-models-on-a-budget/s1.mp4'
+file '/Users/bo/GitHub/erosolar-org/studio/out/how-deepseek-trains-frontier-models-on-a-budget/s2.mp4'
+file '/Users/bo/GitHub/erosolar-org/studio/out/how-deepseek-trains-frontier-models-on-a-budget/s3.mp4'
+file '/Users/bo/GitHub/erosolar-org/studio/out/how-deepseek-trains-frontier-models-on-a-budget/s4.mp4'
+file '/Users/bo/GitHub/erosolar-org/studio/out/how-deepseek-trains-frontier-models-on-a-budget/s5.mp4'
+file '/Users/bo/GitHub/erosolar-org/studio/out/how-deepseek-trains-frontier-models-on-a-budget/s6.mp4'

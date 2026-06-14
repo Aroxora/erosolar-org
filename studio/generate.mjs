@@ -28,6 +28,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import admin from 'firebase-admin';
 
@@ -43,14 +44,19 @@ const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'twitch-womens-history';
 const BUCKET = process.env.FIREBASE_STORAGE_BUCKET || `${PROJECT_ID}.firebasestorage.app`;
 const W = 1920, H = 1080, FPS = 30;
 
+// Firebase is OPTIONAL: with a service-account key we publish (Storage + Firestore);
+// without one the video still renders locally and we just skip publishing.
 function db() {
-  if (!admin.apps.length) {
-    const sa = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    admin.initializeApp(sa && existsSync(sa)
-      ? { credential: admin.credential.cert(JSON.parse(readFileSync(sa, 'utf8'))), projectId: PROJECT_ID, storageBucket: BUCKET }
-      : { credential: admin.credential.applicationDefault(), projectId: PROJECT_ID, storageBucket: BUCKET });
+  if (admin.apps.length) return admin.firestore();
+  const sa = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (!sa || !existsSync(sa)) {
+    console.warn('No Firebase service-account key — rendering LOCAL-ONLY (add', sa || 'GOOGLE_APPLICATION_CREDENTIALS', 'to publish to /studio).');
+    return null;
   }
-  return admin.firestore();
+  try {
+    admin.initializeApp({ credential: admin.credential.cert(JSON.parse(readFileSync(sa, 'utf8'))), projectId: PROJECT_ID, storageBucket: BUCKET });
+    return admin.firestore();
+  } catch (e) { console.warn('Firebase init failed — rendering LOCAL-ONLY:', e.message); return null; }
 }
 
 async function deepseekJSON(prompt) {
@@ -152,21 +158,29 @@ async function main() {
   let videoUrl = '', thumbUrl = '';
   try {
     const bucket = admin.storage().bucket();
-    const up = async (local, dest, type) => { await bucket.upload(local, { destination: dest, metadata: { contentType: type } }); const f = bucket.file(dest); await f.makePublic(); return `https://storage.googleapis.com/${bucket.name}/${dest}`; };
+    const up = async (local, dest, type) => {
+      const token = randomUUID();
+      await bucket.upload(local, { destination: dest, metadata: { contentType: type, metadata: { firebaseStorageDownloadTokens: token } } });
+      return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(dest)}?alt=media&token=${token}`;
+    };
     videoUrl = await up(finalMp4, `studio/${slug}.mp4`, 'video/mp4');
     thumbUrl = await up(thumb, `studio/${slug}.jpg`, 'image/jpeg');
     console.log('Uploaded:', videoUrl);
   } catch (e) { console.warn('Storage upload skipped:', e.message); }
 
-  await fs0.collection('videos').doc(slug).set({
-    title: script.title || theme, description: script.description || '', topic: theme,
-    transcript: transcriptLines.join('\n\n'), videoUrl, thumbUrl,
-    durationSec: Math.round(t), segments: segs.length,
-    status: videoUrl ? 'published' : 'local-only',
-    model: `${DEEPSEEK_MODEL} + ${XAI_IMAGE_MODEL} + say + ffmpeg`,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
-  console.log('Recorded videos/' + slug + '. Done.');
+  if (fs0) {
+    await fs0.collection('videos').doc(slug).set({
+      title: script.title || theme, description: script.description || '', topic: theme,
+      transcript: transcriptLines.join('\n\n'), videoUrl, thumbUrl,
+      durationSec: Math.round(t), segments: segs.length,
+      status: videoUrl ? 'published' : 'local-only',
+      model: `${DEEPSEEK_MODEL} + ${XAI_IMAGE_MODEL} + say + ffmpeg`,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    console.log(`Recorded videos/${slug} (${videoUrl ? 'published' : 'no Storage upload'}). Done.`);
+  } else {
+    console.log(`\n✅ Done (LOCAL-ONLY — no Firebase key).\n   Video:      ${finalMp4}\n   Transcript: ${path.join(work, 'transcript.txt')}\n   Captions:   ${path.join(work, 'captions.srt')}\n   Add outreach/service-account.json (and re-run) to publish it to erosolar.org/studio.`);
+  }
 }
 
 main().catch((e) => { console.error('Studio failed:', e); process.exit(1); });
