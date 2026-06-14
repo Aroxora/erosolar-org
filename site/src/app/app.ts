@@ -11,10 +11,12 @@ import {
   EnvironmentInjector,
   ApplicationRef,
 } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs/operators';
 import { AuthService } from './services/auth.service';
 import { FirestoreService } from './services/firestore.service';
+import { SeoService } from './seo.service';
 import { Chatbot } from './components/chatbot';
 
 @Component({
@@ -29,6 +31,19 @@ export class App implements AfterViewInit, OnDestroy {
   private fs = inject(FirestoreService);
   private envInjector = inject(EnvironmentInjector);
   private appRef = inject(ApplicationRef);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private seo = inject(SeoService);
+
+  constructor() {
+    // Per-route SEO: title, meta description/keywords, canonical, OG + Twitter.
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
+      let r = this.route;
+      while (r.firstChild) r = r.firstChild;
+      const seo = r.snapshot.data['seo'];
+      if (seo) this.seo.update(seo);
+    });
+  }
 
   @ViewChild('field') private fieldRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('hero') private heroRef?: ElementRef<HTMLElement>;

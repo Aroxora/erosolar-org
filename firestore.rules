@@ -1,72 +1,44 @@
 rules_version = '2';
 
-// erosolar-org — Bo Shang central portfolio + agentic control surface.
-// Public content (jobs, phd status, blog/updates, resume highlights) is world-readable.
-// All mutating writes are performed exclusively by:
-//   - Cloud Functions using Admin SDK (bypass rules), or
-//   - Local/Lambda workers using service account.
-// Client writes are denied except for narrowly-scoped owner self-management (future).
-// Admin-only surfaces (chatbot updates, outreach control, history) require
-// Firebase Auth + exact email match on the callable side (enforced in code).
+// erosolar-org — Firestore security rules (Firebase Spark plan; no Cloud Functions).
+//
+// Public content (jobs, phd status, dated updates) is world-readable.
+// The single admin (daburu.dragon@gmail.com, via Google sign-in) writes the
+// agentic results + controls DIRECTLY from the browser — the AWS Lambda backend
+// only computes (DeepSeek + Tavily) and never touches Firestore, so no
+// service-account key is needed for the interactive path.
+//
+// The local Proton-Bridge worker (and the optional scheduled Lambda scanner) use
+// the Admin SDK with a service-account key, which BYPASSES these rules entirely.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // === PUBLIC LIVE DATA (agent-written, world-readable) ===
-    match /jobs/{jobId} {
-      allow read: if true;
-      allow write: if false;
-    }
-    match /phdPrograms/{programId} {
-      allow read: if true;
-      allow write: if false;
-    }
-    match /updates/{updateId} {   // blog-style dated agentic posts (resume, jobs, phd, site changes)
-      allow read: if true;
-      allow write: if false;
-    }
-    match /outreachHistory/{entryId} {
-      // History is readable by the single admin (checked in callable / rules below via token)
-      // but for client we gate strictly; public never sees full history.
-      allow read: if request.auth != null && request.auth.token.email == 'daburu.dragon@gmail.com';
-      allow write: if false;
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'daburu.dragon@gmail.com'
+        && request.auth.token.email_verified == true;
     }
 
-    // Job applications (auto + manual) — full text + status, admin-only read, server writes.
-    match /jobApplications/{appId} {
-      allow read: if request.auth != null && request.auth.token.email == 'daburu.dragon@gmail.com';
-      allow write: if false;
-    }
+    // ── public live data: world-readable; admin writes results from the browser ──
+    match /jobs/{id}         { allow read: if true; allow write: if isAdmin(); }
+    match /phdPrograms/{id}  { allow read: if true; allow write: if isAdmin(); }
+    match /updates/{id}      { allow read: if true; allow write: if isAdmin(); }
 
-    // === ADMIN CONTROL SURFACE (owner only via auth) ===
-    match /settings/{doc} {
-      allow read: if request.auth != null && request.auth.token.email == 'daburu.dragon@gmail.com';
-      allow write: if false;  // writes only via admin callables or functions
-    }
+    // ── admin control surface (owner only) ──
+    match /settings/{doc}            { allow read, write: if isAdmin(); }
+    match /chatLogs/{id}             { allow read, write: if isAdmin(); }
+    match /outreachQueue/{id}        { allow read, write: if isAdmin(); }
+    match /applicationQueue/{id}     { allow read, write: if isAdmin(); }
 
-    // Chat log for the admin chatbot (history of prompts/responses + actions taken)
-    match /chatLogs/{logId} {
-      allow read: if request.auth != null && request.auth.token.email == 'daburu.dragon@gmail.com';
-      allow write: if false;
-    }
+    // ── written only by the trusted local worker / scheduled scanner via Admin SDK
+    //    (bypasses rules); the admin can read the full history in the browser ──
+    match /jobApplications/{id}      { allow read: if isAdmin(); allow write: if false; }
+    match /outreachHistory/{id}      { allow read: if isAdmin(); allow write: if false; }
 
-    // Temporary queues (drained by trusted local worker / functions)
-    match /applicationQueue/{qid} {
-      allow read: if request.auth != null && request.auth.token.email == 'daburu.dragon@gmail.com';
-      allow write: if false;
-    }
-    match /outreachQueue/{qid} {
-      allow read: if request.auth != null && request.auth.token.email == 'daburu.dragon@gmail.com';
-      allow write: if false;
-    }
+    // ── optional per-user self data (future) ──
+    match /users/{uid}/{document=**} { allow read, write: if request.auth != null && request.auth.uid == uid; }
 
-    // === OWNER SELF DATA (future expansion, e.g. personal bookmarks) ===
-    match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-    }
-
-    // Deny by default for anything not explicitly allowed
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    // deny everything else
+    match /{document=**} { allow read, write: if false; }
   }
 }
