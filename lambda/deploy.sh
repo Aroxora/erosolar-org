@@ -20,6 +20,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REGION="${AWS_REGION:-us-east-1}"
+ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 # NOTE: must be a UNIQUE name — `erosolar-api` is the vigil-by-trenchwork backend.
 FN="${FN_NAME:-erosolar-org-api}"
 SCHED_FN="${SCHED_FN_NAME:-erosolar-org-scheduler}"
@@ -83,21 +84,30 @@ deploy_fn () {  # name handler env
 }
 
 deploy_fn "$FN" "api.handler" "$ENV_API"
+LAMBDA_ARN="arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${FN}"
 
-echo "==> Ensuring CORS-enabled Function URL ..."
-# Note: do NOT list OPTIONS in AllowMethods — Function URL CORS handles preflight
-# automatically, and each method value must be <= 6 chars (so "OPTIONS" is rejected).
-CORS_JSON='{"AllowOrigins":["'"$ALLOW_ORIGIN"'","http://localhost:4200"],"AllowMethods":["POST"],"AllowHeaders":["authorization","content-type"],"MaxAge":3600}'
-if ! aws lambda get-function-url-config --function-name "$FN" --region "$REGION" >/dev/null 2>&1; then
-  aws lambda create-function-url-config --function-name "$FN" --auth-type NONE --cors "$CORS_JSON" --region "$REGION" >/dev/null
-  aws lambda add-permission --function-name "$FN" --statement-id fnurl --action lambda:InvokeFunctionUrl \
-    --principal '*' --function-url-auth-type NONE --region "$REGION" >/dev/null 2>&1 || true
+# This account blocks public Lambda Function URLs (auth NONE) via an org guardrail,
+# but allows API Gateway HTTP APIs — the same pattern vigil-by-trenchwork uses. So we
+# front the Lambda with an HTTP API. The Lambda itself handles CORS + OPTIONS (the
+# $default route proxies every method, including preflight, to the function).
+aws lambda delete-function-url-config --function-name "$FN" --region "$REGION" >/dev/null 2>&1 || true
+
+echo "==> Ensuring API Gateway HTTP API (${FN}) ..."
+API_ID="$(aws apigatewayv2 get-apis --region "$REGION" --query "Items[?Name=='${FN}'].ApiId | [0]" --output text)"
+if [[ -z "$API_ID" || "$API_ID" == "None" ]]; then
+  API_ID="$(aws apigatewayv2 create-api --name "$FN" --protocol-type HTTP --target "$LAMBDA_ARN" --region "$REGION" --query ApiId --output text)"
+  echo "    created API: $API_ID"
 else
-  aws lambda update-function-url-config --function-name "$FN" --cors "$CORS_JSON" --region "$REGION" >/dev/null
+  echo "    API exists: $API_ID"
 fi
-URL="$(aws lambda get-function-url-config --function-name "$FN" --region "$REGION" --query 'FunctionUrl' --output text)"
-URL="${URL%/}"
-echo "    Function URL: $URL"
+aws lambda add-permission --function-name "$FN" --statement-id apigw-invoke --action lambda:InvokeFunction \
+  --principal apigateway.amazonaws.com --source-arn "arn:aws:execute-api:${REGION}:${ACCOUNT_ID}:${API_ID}/*/*" \
+  --region "$REGION" >/dev/null 2>&1 || true
+if ! aws apigatewayv2 get-stage --api-id "$API_ID" --stage-name '$default' --region "$REGION" >/dev/null 2>&1; then
+  aws apigatewayv2 create-stage --api-id "$API_ID" --stage-name '$default' --auto-deploy --region "$REGION" >/dev/null
+fi
+URL="https://${API_ID}.execute-api.${REGION}.amazonaws.com"
+echo "    API URL: $URL"
 
 # Optional scheduled scanner (only if a service-account key is provided).
 if [[ -n "${FIREBASE_SERVICE_ACCOUNT:-}" ]]; then
@@ -118,6 +128,14 @@ if [[ -f "$CFG" ]]; then
   ( cd "$ROOT" && firebase deploy --only hosting,firestore:rules --project "$FIREBASE_PROJECT_ID" >/dev/null )
   echo "    frontend rebuilt + hosting/rules redeployed with API base $URL"
 fi
+
+echo ""
+echo "==> Verifying endpoint ..."
+sleep 4
+echo -n "   unauthenticated /scan-jobs (expect 401 from our code): "
+curl -s -o /dev/null -w "%{http_code}\n" -m 25 -X POST "$URL/scan-jobs" -H "Content-Type: application/json" -d '{}' || true
+echo -n "   public /translate (expect a Chinese translation): "
+curl -s -m 45 -X POST "$URL/translate" -H "Content-Type: application/json" -d '{"texts":["Hello"],"target":"zh"}' | head -c 180; echo
 
 echo ""
 echo "✅ Done."
