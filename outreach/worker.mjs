@@ -188,6 +188,184 @@ async function getAutoApplyEnabled() {
 // Compact resume context for job application drafting (same spirit as CF version)
 const APP_RESUME = `Bo Shang builds owned, verifiable agentic systems and load-bearing infra. Shipped: Anvilwing (DeepSeek v4 Pro 1M-context terminal coding agent, npm-published, adversarial verifier, permission modes, headless SDK); The Meridian (fully autonomous Economist-style newspaper: DeepSeek plans/reports/writes + TTS, multi-platform Angular/iOS/Watch + VAPID); DRIFT (hard-science screenplay site with living weekly DeepSeek+Tavily science curator, long-horizon video pipeline using Seedance chaining + ffmpeg, grounded companion); Frontier Model Index (3 live auto-updated AI atlas sites + iOS, daily Tavily+DeepSeek synthesis to Firestore); erosolar (honest small CoT LLM pipeline with measured metrics only + Qwen agent stack + Angular chat); Endearo (24/7 life-assistant with Proton Bridge + local daemons, memory/todos, momentum coaching); Trenchwork (Go desktop activity tracker + iOS/Watch Live Activities + Tailscale approvals for agent runs). All owner-controlled, DeepSeek+Tavily heavy, no vendor lock-in. Open to international roles and willing to handle any required visa/sponsorship/relocation process. Links: erosolar.org, trenchwork.live.`.trim();
 
+// ════════════════════════════════════════════════════════════════════════════
+//  INBOUND MAIL: read (non-destructive), fix bounces, triage replies via DeepSeek
+// ════════════════════════════════════════════════════════════════════════════
+const HUMAN_EMAIL = process.env.HUMAN_EMAIL || 'bo@shang.software';
+
+async function deepseekRaw(messages, model = 'deepseek-v4-pro', json = false, max_tokens = 1600) {
+  const r = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${DEEPSEEK_API_KEY}` },
+    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens, ...(json ? { response_format: { type: 'json_object' } } : {}) }),
+  });
+  if (!r.ok) throw new Error('DeepSeek ' + r.status + ': ' + (await r.text()).slice(0, 160));
+  return (await r.json()).choices?.[0]?.message?.content?.trim() || '';
+}
+
+async function getMailCursor() { try { return (await db.collection('settings').doc('mailCursor').get()).data()?.inboxUid || 0; } catch { return 0; } }
+async function setMailCursor(uid) { try { await db.collection('settings').doc('mailCursor').set({ inboxUid: uid, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true }); } catch {} }
+
+function looksLikeBounce(p) {
+  const from = (p.from?.text || '').toLowerCase();
+  const subj = (p.subject || '').toLowerCase();
+  return /mailer-daemon|postmaster|mail delivery (system|subsystem)/.test(from)
+    || /undeliver|delivery status notification|delivery (failure|incomplete)|returned mail|failure notice|address not found/.test(subj);
+}
+function extractFailedAddr(p) {
+  const body = `${p.text || ''} ${p.html || ''}`;
+  const m = body.match(/final-recipient:\s*rfc822;\s*<?([^\s<>]+@[^\s<>]+)/i)
+    || body.match(/<([^\s<>]+@[^\s<>]+)>[^@]{0,40}?[45]\d\d/)
+    || body.match(/([^\s<>]+@[^\s<>]+)[^@]{0,40}?(?:not found|does not exist|unknown|no such user|undeliverable)/i);
+  return m ? m[1].toLowerCase() : '';
+}
+async function recentOutreachTo(addr) {
+  try {
+    const snap = await db.collection('outreachHistory').where('to', '==', addr).limit(10).get();
+    const docs = snap.docs.map((d) => ({ id: d.id, ref: d.ref, ...d.data() }));
+    docs.sort((a, b) => (b.sentAt?.toMillis?.() || 0) - (a.sentAt?.toMillis?.() || 0));
+    return docs[0] || null;
+  } catch { return null; }
+}
+async function emailHuman(subject, body) {
+  try { await sendMail({ to: HUMAN_EMAIL, subject: `[outreach] ${subject}`, text: body }); console.log('[mail] notified human:', subject); }
+  catch (e) { console.warn('[mail] human notify failed:', e.message); }
+}
+async function logTriage(rec) {
+  try {
+    const emb = await embed(`${rec.subject || ''} ${rec.summary || rec.reason || ''}`);
+    await db.collection('mailTriage').add({ ...rec, vec: emb.vec, embModel: emb.model, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+  } catch (e) { console.warn('[mail] triage log failed:', e.message); }
+}
+
+async function handleBounce(p, outreachOn) {
+  const bad = extractFailedAddr(p);
+  let fix = { fixable: false };
+  if (bad) {
+    try { fix = JSON.parse(await deepseekRaw([{ role: 'user', content: `An outreach email to "${bad}" bounced. If this address has an OBVIOUS typo (gmial->gmail, missing/wrong TLD, etc.), return JSON {"fixable":true,"corrected":"<addr>","confidence":0-1}; otherwise {"fixable":false}. JSON only.` }], 'deepseek-v4-pro', true)); } catch {}
+  }
+  const orig = bad ? await recentOutreachTo(bad) : null;
+  if (orig) { try { await orig.ref.update({ status: 'bounced', bounceAt: admin.firestore.FieldValue.serverTimestamp() }); } catch {} }
+
+  if (fix.fixable && fix.corrected && fix.confidence >= 0.8 && bad !== fix.corrected && outreachOn) {
+    await db.collection('outreachQueue').add({ to: fix.corrected, subject: (orig?.subject || p.subject || 'Following up').replace(/^(re|fwd):\s*/i, ''), notes: `auto-corrected from bounced ${bad}`, status: 'queued', requestedBy: 'mail-triage', requestedAt: admin.firestore.FieldValue.serverTimestamp() });
+    await logTriage({ kind: 'bounce-fixed', badAddress: bad, corrected: fix.corrected, subject: p.subject || '' });
+    console.log('[mail] auto-corrected bounced address', bad, '->', fix.corrected);
+  } else {
+    await emailHuman(`Broken address needs you: ${bad || 'unknown'}`, `An outreach email bounced and DeepSeek found no confident automatic fix.\n\nFailed address: ${bad || '(could not extract)'}\nBounce subject: ${p.subject || ''}\n\nRequired human action: verify / correct the recipient address, or remove this contact.\n\n— agentic outreach worker`);
+    await logTriage({ kind: 'bounce-human', badAddress: bad, subject: p.subject || '' });
+  }
+}
+
+async function handleReply(p, outreach, outreachOn) {
+  const replyText = (p.text || '').slice(0, 4000);
+  let j = { action: 'human', reason: 'could not judge', followupDraft: '', humanActions: 'Review the reply.', summary: '' };
+  try {
+    j = JSON.parse(await deepseekRaw([{ role: 'user', content:
+`You triage replies to Bo Shang's outreach. Original outreach to ${outreach.to}, subject "${outreach.subject}". Their reply:
+"""${replyText}"""
+Return JSON ONLY:
+{"action":"followup"|"human"|"deadend","reason":"<1 sentence>","followupDraft":"<if followup: a short warm specific reply from Bo Shang, 100-180 words, end '— Bo Shang'; else empty>","humanActions":"<if human: concrete actions Bo must take; else empty>","summary":"<if deadend: 1-2 sentence reason; else empty>"}
+Rules: "followup" ONLY if a follow-up is absolutely sensible and likely productive (genuine interest / a question / a next step). "human" if it needs Bo's judgment, a decision, credentials, or a meeting. "deadend" if it's a clear no / unsubscribe / irrelevant / no-reply auto-response.` }], 'deepseek-v4-pro', true));
+  } catch (e) { console.warn('[mail] reply judge failed:', e.message); }
+
+  if (j.action === 'followup' && j.followupDraft && outreachOn) {
+    await db.collection('outreachQueue').add({ to: outreach.to, subject: 'Re: ' + (outreach.subject || ''), body: j.followupDraft, notes: 'auto follow-up (DeepSeek judged sensible)', status: 'queued', requestedBy: 'mail-triage', requestedAt: admin.firestore.FieldValue.serverTimestamp() });
+    await logTriage({ kind: 'reply-followup', to: outreach.to, subject: outreach.subject || '', reason: j.reason });
+    console.log('[mail] queued sensible follow-up to', outreach.to);
+  } else if (j.action === 'human' || (j.action === 'followup' && !outreachOn)) {
+    await emailHuman(`Reply needs you: ${outreach.to}`, `${outreach.to} replied to "${outreach.subject}".\n\nDeepSeek-v4-pro: ${j.reason}\n\nRequired human action(s):\n${j.humanActions || j.followupDraft || 'Review and respond.'}\n\n— Their reply —\n${replyText.slice(0, 1500)}`);
+    await logTriage({ kind: 'reply-human', to: outreach.to, subject: outreach.subject || '', reason: j.reason });
+  } else {
+    let summary = j.summary || '';
+    try { if (!summary) summary = await deepseekRaw([{ role: 'user', content: `In 1-2 sentences, why is this reply a dead end (no follow-up warranted)? ${replyText.slice(0, 1500)}` }], 'deepseek-v4-flash', false, 200); } catch {}
+    await emailHuman(`Dead end (FYI, no action): ${outreach.to}`, `Marking outreach to ${outreach.to} ("${outreach.subject}") a dead end — no sensible follow-up.\n\nSummary (deepseek-v4-flash): ${summary}\n\n— agentic outreach worker`);
+    await logTriage({ kind: 'reply-deadend', to: outreach.to, subject: outreach.subject || '', summary });
+  }
+}
+
+async function triageMessage(p, outreachOn) {
+  if (looksLikeBounce(p)) return handleBounce(p, outreachOn);
+  const fromAddr = (p.from?.value?.[0]?.address || '').toLowerCase();
+  if (!fromAddr) return;
+  const outreach = await recentOutreachTo(fromAddr);
+  if (outreach) return handleReply(p, outreach, outreachOn);
+  // not a bounce or a known reply → leave it (read-only; nothing to do)
+}
+
+// Read INBOX non-destructively (never marks mail seen), triage anything new.
+async function readAndTriageInbox(outreachOn) {
+  let client;
+  try {
+    client = new ImapFlow({ host: IMAP_HOST, port: IMAP_PORT, secure: IMAP_TLS === 'SSL', auth: { user: IMAP_USER, pass: IMAP_PASS }, logger: false, tls: { rejectUnauthorized: false } });
+    await client.connect();
+  } catch (e) { console.warn('[mail] IMAP connect failed:', e.message); return 0; }
+  let processed = 0;
+  const lock = await client.getMailboxLock('INBOX');
+  try {
+    const cursor = await getMailCursor();
+    if (cursor === 0) {
+      const next = client.mailbox?.uidNext || 1;
+      await setMailCursor(Math.max(0, next - 1));
+      console.log('[mail] bootstrapped cursor at uid', next - 1, '— future mail will be triaged');
+      return 0;
+    }
+    let maxUid = cursor;
+    for await (const m of client.fetch({ uid: `${cursor + 1}:*` }, { uid: true, source: true })) {
+      if (m.uid <= cursor) continue;
+      maxUid = Math.max(maxUid, m.uid);
+      try { await triageMessage(await simpleParser(m.source), outreachOn); processed++; }
+      catch (e) { console.warn('[mail] triage fail uid', m.uid, e.message); }
+    }
+    if (maxUid > cursor) await setMailCursor(maxUid);
+  } finally { lock.release(); await client.logout().catch(() => {}); }
+  return processed;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  GITHUB COMMIT MOMENTUM: alert bo@shang.software when pace drops below average
+//  (deepseek-v4-flash draft; at most one email / 12h to respect sleep)
+// ════════════════════════════════════════════════════════════════════════════
+const GITHUB_USER = process.env.GITHUB_USER || 'Aroxora';
+
+async function fetchCommitTimes() {
+  try {
+    const r = await fetch(`https://api.github.com/users/${GITHUB_USER}/events/public?per_page=100`, {
+      headers: { 'User-Agent': 'erosolar-momentum-worker', Accept: 'application/vnd.github+json', ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}) },
+    });
+    if (!r.ok) return [];
+    const events = await r.json();
+    const times = [];
+    for (const e of events) if (e.type === 'PushEvent' && e.payload?.commits?.length) for (const _ of e.payload.commits) times.push(new Date(e.created_at).getTime());
+    return times.sort((a, b) => b - a); // newest first
+  } catch { return []; }
+}
+
+async function checkGithubMomentum() {
+  const times = await fetchCommitTimes();
+  if (times.length < 4) return;
+  const gaps = [];
+  for (let i = 0; i < times.length - 1; i++) gaps.push(times[i] - times[i + 1]);
+  const avg = gaps.reduce((s, x) => s + x, 0) / gaps.length;
+  const sinceLast = Date.now() - times[0];
+  if (sinceLast <= avg) return; // on pace or ahead
+
+  const s = await db.collection('settings').doc('commitAlert').get();
+  const lastSent = s.data()?.lastSentAt?.toMillis?.() || 0;
+  if (Date.now() - lastSent < 12 * 3600 * 1000) return; // max one email / 12h
+
+  const hrs = (sinceLast / 3600000).toFixed(1);
+  const avgHrs = (avg / 3600000).toFixed(1);
+  let body = `You've gone ${hrs}h since your last GitHub commit; your recent average between commits is ${avgHrs}h. You're below your usual pace — a small commit would get the streak moving. — your momentum agent`;
+  try {
+    body = await deepseekRaw([{ role: 'user', content: `Write a short (<90 words), warm, motivating nudge to Bo Shang. It's been ${hrs} hours since his last GitHub commit; his recent average between commits is ${avgHrs} hours, so he's below pace. Encourage one small concrete commit. Sign "— your momentum agent".` }], 'deepseek-v4-flash', false, 220);
+  } catch {}
+  if (!DRY) await sendMail({ to: HUMAN_EMAIL, subject: `[momentum] ${hrs}h since last commit (avg ${avgHrs}h)`, text: body });
+  else console.log('[github][DRY] would alert:', hrs, 'h vs avg', avgHrs);
+  await db.collection('settings').doc('commitAlert').set({ lastSentAt: admin.firestore.FieldValue.serverTimestamp(), sinceLastHrs: Number(hrs), avgHrs: Number(avgHrs), commitsAnalyzed: times.length }, { merge: true });
+  console.log('[github] momentum alert:', hrs, 'h vs avg', avgHrs);
+}
+
 async function drainQueue() {
   const snap = await db.collection('outreachQueue').where('status', '==', 'queued').limit(5).get();
   if (snap.empty) return 0;
@@ -427,6 +605,14 @@ async function mainLoop() {
         const n = await drainApplications();
         if (n > 0) console.log('Manual application drain (autoApply off):', n);
       }
+
+      // Inbound mail: read + triage (bounces + replies). Always reads (non-destructive);
+      // third-party follow-ups are only sent when outreach is ON.
+      try { const n = await readAndTriageInbox(outreachOn); if (n) console.log('[mail] triaged', n, 'new message(s)'); }
+      catch (e) { console.error('[mail] inbox tick error', e.message); }
+
+      // GitHub commit-momentum nudge (deepseek-v4-flash, max 1 email / 12h).
+      try { await checkGithubMomentum(); } catch (e) { console.error('[github] tick error', e.message); }
     } catch (e) {
       console.error('Loop tick error', e);
     }

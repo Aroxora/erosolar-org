@@ -6,6 +6,7 @@ import { Tracker } from './pages/tracker';
 import { Jobs } from './pages/jobs';
 import { Applications } from './pages/applications';
 import { PhdLabs } from './pages/phd-labs';
+import { Commits } from './pages/commits';
 
 export const routes: Routes = [
   {
@@ -60,6 +61,15 @@ export const routes: Routes = [
       title: 'Log — dated agentic updates | Bo Shang',
       description: 'Dated, blog-style updates auto-written by DeepSeek-v4-pro + Tavily (and the admin): launches, daily scans, PhD sweeps, and site changes — a transparent agentic build log.',
       keywords: 'Bo Shang blog, agentic build log, DeepSeek updates, AI engineering log',
+    } },
+  },
+  {
+    path: 'commits', component: Commits, title: 'GitHub commit tracker | Bo Shang',
+    data: { seo: {
+      path: 'commits',
+      title: 'GitHub commit tracker — build momentum | Bo Shang',
+      description: "A live feed of Bo Shang's recent GitHub commits with build-momentum stats; a local agent emails a deepseek-v4-flash nudge whenever the commit pace drops below the recent average.",
+      keywords: 'Bo Shang GitHub, commit tracker, build momentum, coding activity, agentic productivity',
     } },
   },
   {

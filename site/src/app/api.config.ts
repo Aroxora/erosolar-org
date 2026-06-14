@@ -7,4 +7,4 @@
 // then rebuilds + redeploys hosting. You can also set it by hand and run
 // `npm run build && firebase deploy --only hosting`. Leave blank until deployed;
 // admin actions will show a clear "backend not configured" message.
-export const LAMBDA_API_BASE = '';
+export const LAMBDA_API_BASE = 'https://liewwyddnmgijzg4hrjopavnna0nitam.lambda-url.us-east-1.on.aws';

@@ -65,6 +65,7 @@ export class App implements AfterViewInit, OnDestroy {
     { path: '/phd-labs', label: 'PhD & Labs' },
     { path: '/jobs', label: 'Jobs' },
     { path: '/tracker', label: 'Tracker' },
+    { path: '/commits', label: 'Commits' },
     { path: '/blog', label: 'Log' },
   ];
 
