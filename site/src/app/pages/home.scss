@@ -64,6 +64,25 @@
 }
 .learning-cta { margin-top: 1.4rem; }
 
+// Hero audio summary (TTS) + transcript
+.audio-summary {
+  margin-top: 1.4rem;
+  max-width: 660px;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  padding: .8rem 1rem;
+  background: rgba(255, 255, 255, .03);
+}
+.audio-summary__bar { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+.audio-summary__tag { font-family: var(--mono); font-size: .76rem; color: var(--solar); white-space: nowrap; }
+.audio-summary__tag small { color: var(--muted); }
+.audio-summary__player { height: 34px; flex: 1; min-width: 220px; }
+.audio-summary__dl { font-family: var(--mono); font-size: .74rem; color: var(--muted); text-decoration: none; }
+.audio-summary__dl:hover { color: var(--solar); }
+.audio-summary__tx { margin-top: .6rem; }
+.audio-summary__tx summary { font-family: var(--mono); font-size: .76rem; color: var(--ink-2); cursor: pointer; }
+.audio-summary__tx p { margin: .5rem 0 0; color: var(--ink-2); line-height: 1.6; font-size: .9rem; max-width: 80ch; }
+
 // About / profile prose
 .about-prose {
   max-width: 80ch;
