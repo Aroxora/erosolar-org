@@ -1,0 +1,13 @@
+# dependencies & build output
+site/node_modules/
+site/dist/
+site/.angular/
+
+# firebase
+.firebase/
+firebase-debug.log
+*-debug.log
+
+# os / editor
+.DS_Store
+*.log
