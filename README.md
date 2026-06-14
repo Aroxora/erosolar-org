@@ -4,6 +4,8 @@ Personal site for **Bo Shang** — software engineer · trenchwork.org
 (`bo@trenchwork.org` · `bo@shang.software` · 508-260-0326).
 Built with **Angular** and deployed to **Firebase Hosting**.
 
+**Live:** https://erosolar.org (custom domain) · https://twitch-womens-history.web.app (Firebase)
+
 > This repository is **private**. The deployed site is a clean professional
 > landing page only — it contains nothing about any legal matter and references
 > no third parties.
