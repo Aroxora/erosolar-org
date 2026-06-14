@@ -11,6 +11,8 @@ const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'CODE', 'PRE', 'SVG', 
 const NO_LETTERS = /^[\s\d\W_]*$/;            // numbers / symbols / punctuation only
 const EMAILY = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;   // emails
 const URLY = /^(https?:\/\/|www\.|\/)/i;       // urls / paths
+const TR_ATTRS = ['placeholder', 'aria-label', 'title', 'alt']; // visible attribute text worth translating
+const skippable = (s: string) => { const t = s.trim(); return t.length < 2 || NO_LETTERS.test(t) || EMAILY.test(t) || URLY.test(t); };
 
 @Injectable({ providedIn: 'root' })
 export class LangService {
@@ -22,6 +24,7 @@ export class LangService {
 
   private cache = new Map<string, Tr>();
   private originals = new WeakMap<Text, string>();
+  private attrOriginals = new WeakMap<Element, Record<string, string>>();
   private observer?: MutationObserver;
 
   constructor() {
@@ -84,6 +87,28 @@ export class LangService {
     return nodes;
   }
 
+  // Visible attribute text (placeholders, aria-labels, titles, alts) within the roots,
+  // skipping notranslate / Chinese-authored / non-text values.
+  private collectAttrs(): { el: Element; attr: string }[] {
+    const out: { el: Element; attr: string }[] = [];
+    for (const root of this.roots()) {
+      root.querySelectorAll('[placeholder],[aria-label],[title],[alt]').forEach((el) => {
+        let p: Element | null = el;
+        while (p) {
+          if (SKIP_TAGS.has(p.tagName) || (p as HTMLElement).classList?.contains('notranslate')) return;
+          const lng = p.getAttribute?.('lang');
+          if (lng && /^zh/i.test(lng) && p.tagName !== 'HTML' && p.tagName !== 'BODY') return;
+          p = p.parentElement;
+        }
+        for (const attr of TR_ATTRS) {
+          const v = el.getAttribute(attr);
+          if (v && !skippable(v)) out.push({ el, attr });
+        }
+      });
+    }
+    return out;
+  }
+
   private render(orig: string): string {
     const tr = this.cache.get(orig.trim());
     if (!tr) return orig;
@@ -93,17 +118,29 @@ export class LangService {
   private async apply() {
     this.disconnect();
     const nodes = this.collect();
+    const attrs = this.collectAttrs();
 
     if (this.lang() === 'en') {
       for (const n of nodes) { const o = this.originals.get(n); if (o != null && n.nodeValue !== o) n.nodeValue = o; }
+      for (const { el, attr } of attrs) {
+        const o = this.attrOriginals.get(el)?.[attr];
+        if (o != null && el.getAttribute(attr) !== o) el.setAttribute(attr, o);
+      }
       return;
     }
 
-    // record originals + find untranslated unique strings
+    // record originals (text + attrs) + find untranslated unique strings
     const missing = new Set<string>();
     for (const n of nodes) {
       if (!this.originals.has(n)) this.originals.set(n, n.nodeValue || '');
       const key = (this.originals.get(n) || '').trim();
+      if (key && !this.cache.has(key)) missing.add(key);
+    }
+    for (const { el, attr } of attrs) {
+      let m = this.attrOriginals.get(el);
+      if (!m) { m = {}; this.attrOriginals.set(el, m); }
+      if (!(attr in m)) m[attr] = el.getAttribute(attr) || '';
+      const key = (m[attr] || '').trim();
       if (key && !this.cache.has(key)) missing.add(key);
     }
 
@@ -119,6 +156,10 @@ export class LangService {
       const lead = o.match(/^\s*/)?.[0] ?? '';
       const trail = o.match(/\s*$/)?.[0] ?? '';
       n.nodeValue = lead + this.render(o) + trail;
+    }
+    for (const { el, attr } of attrs) {
+      const o = this.attrOriginals.get(el)?.[attr];
+      if (o != null) el.setAttribute(attr, this.render(o));
     }
     this.connect();
   }
