@@ -95,3 +95,90 @@ a { color: inherit; text-decoration: none; }
 ::-webkit-scrollbar { width: 11px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: linear-gradient(var(--solar), var(--ember)); border-radius: 99px; border: 3px solid var(--bg); }
+
+/* ===========================================================================
+   Shared design system — GLOBAL (so routed page components are styled too).
+   Angular emulates view encapsulation, so the App/Home component styles do not
+   reach <router-outlet> children. These global rules give every page (Work,
+   Jobs, Tracker, PhD & Labs, Blog, Applications, Home) consistent layout and UI.
+   Component-scoped styles still win where defined (higher specificity).
+   =========================================================================== */
+
+/* routed component hosts are custom elements (inline by default) */
+app-home, app-work, app-blog, app-tracker, app-jobs, app-applications, app-phd-labs { display: block; }
+
+/* sections */
+.section {
+  position: relative;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(2.6rem, 6vw, 4.6rem) clamp(1.1rem, 4vw, 3.2rem);
+}
+.section-alt, .section--alt {
+  max-width: none;
+  background:
+    linear-gradient(180deg, transparent, rgba(255, 159, 69, 0.04), transparent),
+    var(--bg-2);
+  border-block: 1px solid var(--line-soft);
+  > * { max-width: var(--maxw); margin-inline: auto; }
+}
+.section-head, .section__head { margin-bottom: clamp(1.4rem, 4vw, 2.4rem); }
+
+/* headings */
+.section .title, h2.title, .section__title, .section-head h2 {
+  font-family: var(--display);
+  font-weight: 340;
+  font-size: clamp(1.75rem, 4.4vw, 2.9rem);
+  letter-spacing: -0.02em;
+  line-height: 1.06;
+  margin: 0;
+}
+.section h3 { font-family: var(--display); font-weight: 400; font-size: 1.35rem; margin: 1.6rem 0 0.7rem; letter-spacing: -0.01em; }
+.section h4 { font-family: var(--display); font-weight: 400; margin: 0 0 0.5rem; }
+.sub { color: var(--muted); max-width: 76ch; margin: 0.5rem 0 0; line-height: 1.6; }
+
+/* kicker / eyebrow */
+.kicker {
+  font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--solar); margin: 0 0 0.7rem;
+}
+
+/* buttons — support both BEM (--) and single-dash naming used across pages */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.02em;
+  padding: 0.62rem 1.2rem; border-radius: 99px; border: 1px solid var(--line);
+  color: var(--ink-2); cursor: pointer; background: transparent; text-decoration: none;
+  transition: transform 0.25s cubic-bezier(0.2,0.7,0.2,1), box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+.btn:hover { border-color: var(--amber); color: var(--ink); transform: translateY(-2px); }
+.btn-solar, .btn--solar {
+  background: var(--solar-grad); color: #21120a; font-weight: 600; border-color: transparent;
+  box-shadow: 0 10px 30px -12px rgba(255, 122, 51, 0.6);
+}
+.btn-solar:hover, .btn--solar:hover { color: #21120a; transform: translateY(-2px); box-shadow: 0 16px 38px -10px rgba(255, 122, 51, 0.82); }
+.btn-ghost, .btn--ghost { background: transparent; border-color: var(--line); color: var(--ink-2); }
+.btn.tiny, .btn.small { font-size: 0.68rem; padding: 0.28rem 0.6rem; }
+
+/* marquee (home) */
+.marquee { border-block: 1px solid var(--line-soft); overflow: hidden; background: rgba(255, 159, 69, 0.03); }
+.marquee .track {
+  display: inline-flex; align-items: center; gap: 1.4rem; white-space: nowrap;
+  padding: 0.95rem 0; animation: slideX 36s linear infinite;
+}
+.marquee .track span { font-family: var(--display); font-style: italic; font-size: 1.25rem; color: var(--ink-2); }
+.marquee .track b { color: var(--solar); font-size: 0.7rem; }
+@keyframes slideX { to { transform: translateX(-50%); } }
+
+/* utility text + form inputs (page inline styles override where defined) */
+.muted { color: var(--muted); }
+.small { font-size: 0.8rem; color: var(--muted); }
+.note  { margin-top: 1.2rem; color: var(--muted); font-size: 0.9rem; max-width: 82ch; line-height: 1.6; }
+.cta   { margin-top: 1.4rem; display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-start; }
+.go    { color: var(--solar); font-family: var(--mono); font-size: 0.8rem; }
+.tag   { font-family: var(--mono); font-size: 0.68rem; padding: 0.1rem 0.45rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+.in {
+  background: #111; color: var(--ink-2); border: 1px solid #333;
+  padding: 0.45rem 0.6rem; border-radius: 8px; font-family: inherit;
+}
+.in:focus { outline: none; border-color: var(--amber); }

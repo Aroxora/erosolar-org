@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FirestoreService, Update } from '../services/firestore.service';
 import { AuthService } from '../services/auth.service';
+import { SEED_UPDATES } from '../seed.data';
 
 @Component({
   selector: 'app-blog',
@@ -57,7 +58,7 @@ export class Blog implements OnInit, OnDestroy {
   private unsub?: () => void;
 
   ngOnInit() {
-    this.unsub = this.fs.listenUpdates((u) => this.updates.set(u));
+    this.unsub = this.fs.listenUpdates((u) => this.updates.set(u.length ? u : SEED_UPDATES));
   }
   ngOnDestroy() { this.unsub?.(); }
 

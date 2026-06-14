@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FirestoreService, PhdProgram, Job } from '../services/firestore.service';
 import { AuthService } from '../services/auth.service';
+import { SEED_PHDS, SEED_JOBS } from '../seed.data';
 
 @Component({
   selector: 'app-tracker',
@@ -78,8 +79,8 @@ export class Tracker implements OnInit, OnDestroy {
   unsubs: Array<() => void> = [];
 
   ngOnInit() {
-    this.unsubs.push(this.fs.listenPhds((p) => this.phds.set(p)));
-    this.unsubs.push(this.fs.listenJobs((j) => this.jobs.set(j)));
+    this.unsubs.push(this.fs.listenPhds((p) => this.phds.set(p.length ? p : SEED_PHDS)));
+    this.unsubs.push(this.fs.listenJobs((j) => this.jobs.set(j.length ? j : SEED_JOBS)));
   }
   ngOnDestroy() { this.unsubs.forEach(u => u()); }
 

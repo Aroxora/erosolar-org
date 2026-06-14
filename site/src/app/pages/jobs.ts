@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FirestoreService, Job } from '../services/firestore.service';
 import { AuthService } from '../services/auth.service';
+import { SEED_JOBS } from '../seed.data';
 
 @Component({
   selector: 'app-jobs',
@@ -90,7 +91,7 @@ export class Jobs implements OnInit, OnDestroy {
   visa = '';
   unsub?: () => void;
 
-  ngOnInit() { this.unsub = this.fs.listenJobs(j => this.jobs.set(j)); }
+  ngOnInit() { this.unsub = this.fs.listenJobs(j => this.jobs.set(j.length ? j : SEED_JOBS)); }
   ngOnDestroy() { this.unsub?.(); }
 
   filtered() {

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FirestoreService, PhdProgram } from '../services/firestore.service';
 import { AuthService } from '../services/auth.service';
+import { SEED_PHDS } from '../seed.data';
 
 interface AiLab {
   name: string;
@@ -468,7 +469,7 @@ export class PhdLabs implements OnInit, OnDestroy {
   ];
 
   ngOnInit() {
-    this.unsub = this.fs.listenPhds((list) => this.phds.set(list));
+    this.unsub = this.fs.listenPhds((list) => this.phds.set(list.length ? list : SEED_PHDS));
   }
   ngOnDestroy() { this.unsub?.(); }
 

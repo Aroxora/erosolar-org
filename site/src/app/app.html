@@ -41,16 +41,18 @@
 </header>
 
 <main>
-  <!-- Compact hero on non-home (the canvas lives here for home feel) -->
+  <!-- Slim header band with the solar starfield (consistent across all routes) -->
   <section id="top" class="hero mini" #hero>
     <canvas class="hero__field" #field aria-hidden="true"></canvas>
     <div class="hero__light" aria-hidden="true"></div>
-    <div class="hero__inner">
-      <p class="eyebrow"><span class="eyebrow__dot"></span> erosolar.org · AGENTIC BUILDER</p>
-      <h1 class="hero__title" style="font-size:clamp(1.9rem,5.2vw,3.6rem)">The parts that have to hold.</h1>
-      <div style="margin-top:.8rem">
-        <a class="btn btn--solar" routerLink="/">Home + résumé</a>
-        <a class="btn btn--ghost" routerLink="/tracker">Live trackers</a>
+    <div class="hero__inner band">
+      <p class="eyebrow"><span class="eyebrow__dot"></span> Bo&nbsp;Shang · erosolar.org · agentic builder</p>
+      <div class="band__links">
+        <a class="btn btn--solar" routerLink="/">Home &amp; résumé</a>
+        <a class="btn btn--ghost" routerLink="/work">Work</a>
+        <a class="btn btn--ghost" routerLink="/phd-labs">PhD &amp; labs</a>
+        <a class="btn btn--ghost" routerLink="/jobs">Jobs</a>
+        <a class="btn btn--ghost" routerLink="/tracker">Trackers</a>
       </div>
     </div>
   </section>
