@@ -5,8 +5,13 @@
   "type": "module",
   "description": "erosolar.org agentic backend on AWS Lambda (Spark-plan-compatible): compute-only HTTP API (DeepSeek + Tavily, Firebase ID-token verified) + optional scheduled Firestore scanner.",
   "main": "api.mjs",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "firebase-admin": "^12.7.0"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   }
 }

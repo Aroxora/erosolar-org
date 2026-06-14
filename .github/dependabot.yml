@@ -1,0 +1,47 @@
+# Dependabot for erosolar-org. Grouped weekly updates so the repo never accumulates
+# dozens of stray PRs; security updates still come through promptly.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/site"
+    schedule: { interval: "weekly" }
+    open-pull-requests-limit: 5
+    groups:
+      site-deps:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "npm"
+    directory: "/lambda"
+    schedule: { interval: "weekly" }
+    open-pull-requests-limit: 5
+    groups:
+      lambda-deps:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "npm"
+    directory: "/outreach"
+    schedule: { interval: "weekly" }
+    open-pull-requests-limit: 5
+    groups:
+      outreach-deps:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "npm"
+    directory: "/functions"
+    schedule: { interval: "weekly" }
+    open-pull-requests-limit: 5
+    groups:
+      functions-deps:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "npm"
+    directory: "/studio"
+    schedule: { interval: "weekly" }
+    open-pull-requests-limit: 5
+    groups:
+      studio-deps:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: { interval: "weekly" }
