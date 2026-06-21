@@ -13,8 +13,8 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "firebase-admin": "^12.7.0",
-    "imapflow": "^1.0.16",
-    "mailparser": "^3.7.1",
+    "imapflow": "^1.4.2",
+    "mailparser": "^3.9.11",
     "nodemailer": "^8.0.11"
   },
   "overrides": {
